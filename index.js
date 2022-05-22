@@ -135,27 +135,27 @@ db.delete("usersundefined").then(() => {});
 db.delete("userstest_TEST").then(() => {});
 db.delete("userstwinkle ").then(() => {});
 db.delete("usersあの画像嵐じゃないよね。").then(() => {});
-// db.get("usersmf7cli").then((val) => {
-//   val.badge = ["Admin"];
-//   db.set("usersmf7cli", val);
-// });
+db.get("usersmf7cli").then((val) => {
+  val.badge = ["Admin", "メールアドレス登録者"];
+  db.set("usersmf7cli", val);
+});
 
-(async () => {
-  console.log("🤔")
-  userlist_match(await get_userlist(), "email").then((val) => {
-    console.log("🤔: ", val);
-    val.forEach((value) => {
-      db.get(`users${value}`).then((val) => {
-        if(val !== null){
-          if(!val.badge) val.badge = [];
-          // val.badge[val.badge.length] = "メールアドレス登録者";
-          // val.badge.splice(val.badge.length, 1);
-          db.set(`users${value}`, val);
-        }
-      });
-    });
-  });
-})();
+// (async () => {
+//   console.log("🤔")
+//   userlist_match(await get_userlist(), "email").then((val) => {
+//     console.log("🤔: ", val);
+//     val.forEach((value) => {
+//       db.get(`users${value}`).then((val) => {
+//         if(val !== null){
+//           if(!val.badge) val.badge = [];
+//           // val.badge[val.badge.length] = "メールアドレス登録者";
+//           // val.badge.splice(val.badge.length, 1);
+//           db.set(`users${value}`, val);
+//         }
+//       });
+//     });
+//   });
+// })();
 
 // db.get("userswaryu_YND").then((val) => {
 //   val.id = 'waryu_ynd';
@@ -206,6 +206,7 @@ app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieparser());
 app.use("/image/badges", express.static(__dirname + "/views/image/badges"));
+app.use("/audio", express.static(__dirname + "/views/audio"));
 
 // app.use((req, res, next) => {
 //   if (req.headers['x-forwarded-for']) {
@@ -1090,7 +1091,8 @@ threads.threads.map(async (val, index) => {
           thread: { name: val, id: val },
           message: messages[val]["message"],
           status: "",
-          md: md
+          md: md,
+          db: db
         });
       }
       else{
@@ -1103,7 +1105,8 @@ threads.threads.map(async (val, index) => {
           thread: { name: val, id: val },
           message: messages[val]["message"],
           status: "",
-          md: md
+          md: md,
+          db: db
         });
       }
     }
@@ -1157,7 +1160,8 @@ threads.threads.map(async (val, index) => {
               thread: { name: val, id: val },
               message: messages[val]["message"],
               status: "メッセージの削除は送信者と同じである必要があります。",
-              md: md
+              md: md,
+              db: db  
             });
           }
         }
@@ -1166,7 +1170,8 @@ threads.threads.map(async (val, index) => {
             thread: { name: val, id: val },
             message: messages[val]["message"],
             status: "メッセージが存在しません。",
-            md: md
+            md: md,
+            db: db
           });
         }
       }
@@ -1175,7 +1180,8 @@ threads.threads.map(async (val, index) => {
           thread: { name: val, id: val },
           message: messages[val]["message"],
           status: "削除に必要なデータが存在しません。もう一度リクエストしてください。",
-          md: md
+          md: md,
+          db: db
         });
       }
     }
@@ -1184,7 +1190,8 @@ threads.threads.map(async (val, index) => {
         thread: { name: val, id: val },
         message: messages[val]["message"],
         status: "ログインしてください。",
-        md: md
+        md: md,
+        db: db
       });
     }
   });
@@ -1198,8 +1205,8 @@ threads.threads.map(async (val, index) => {
       messages[val] = keys;
       console.log(messages);
 
-        db.set(db_id, messages[val]).then(() => {
-        });  
+      db.set(db_id, messages[val]).then(() => {
+      });  
     });
 
     let user_id;
@@ -1223,7 +1230,8 @@ threads.threads.map(async (val, index) => {
           messages[val].message[messages[val].message.length] = {
             id: req.cookies.id.toLowerCase(),
             text: req.body.submit_text,
-            pinned: false
+            pinned: false,
+            date: new Date()
           }
   
           db.set(db_id, messages[val]).then(() => {
@@ -1242,7 +1250,8 @@ threads.threads.map(async (val, index) => {
           thread: { name: val, id: val },
           message: messages[val]["message"],
           status: "メッセージを入力してください。",
-          md: md
+          md: md,
+          db: db
         });
       }
       else if (!req.cookies.id || !req.cookies.password) {
@@ -1255,7 +1264,8 @@ threads.threads.map(async (val, index) => {
           thread: { name: val, id: val },
           message: messages[val]["message"],
           status: "ログインしてください。",
-          md: md
+          md: md,
+          db: db
         });
       }
       else if(!bcrypt.compareSync(req.cookies.password, account["password"])){
@@ -1296,7 +1306,8 @@ threads.threads.map(async (val, index) => {
         messages[val].message[messages[val].message.length] = {
           id: req.cookies.id,
           text: req.body.submit_text,
-          pinned: false
+          pinned: false,
+          date: new Date()
         }
   
         function autoDeleteMessage() {
@@ -1324,7 +1335,8 @@ threads.threads.map(async (val, index) => {
           // ]
           message: messages[val]["message"],
           status: "メッセージ数が上限を超えているため古いメッセージを削除しました。",
-          md: md
+          md: md,
+          db: db
         });
       }
     }
@@ -1338,7 +1350,8 @@ threads.threads.map(async (val, index) => {
         thread: { name: val, id: val },
         message: messages[val]["message"],
         status: "ログインしてください。",
-        md: md
+        md: md,
+        db: db
       });
     }
   });

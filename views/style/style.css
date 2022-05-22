@@ -27,12 +27,13 @@
 
 .badges {
   background: #dbebf8;
-  border-radius: 5px;
+  border-radius: 15px;
   padding: 1em;
   width: 150px;
   text-align: center;
   display: inline-block; 
   _display: inline;
+  font-size: 13px;
 }
 
 html{
@@ -148,9 +149,10 @@ li .msg_menu {
   padding: 10px 0px; 
   width: 35px; 
   height: 15px;
-  color: #343434; 
+  color: #32358f; 
   text-decoration: none;
   user-select: none;  
+  transition: 0.2s;
 }
 .box1 a {
   width: 100%;
@@ -161,24 +163,25 @@ li .msg_menu {
   top: -0.25em;
 }
 .div-menu-nav a.clicked{
-  background-color:#454545; 
+  background-color:#a3cfef; 
 }
 .div-menu-nav a::before{　/* タブの左側のアクセントの変化の指定 ↓ */
   display: inline-block;
-  content: "■"; 
+/*   content: "■";  */
   color: #67b44a; 
   transform: scaleX(0.4); /* 長方形を表示するにはborder 4pxなどの方法もありますが■をX方向に縮小する方法が楽です */
 }
 .div-menu-nav a.clicked::before{
-  content: "＞"; 
+/*   content: "＞";  */
   color: #dd5656; 
 }
 .div-menu-nav .menu-tab a::before{
   display: inline-block;
-  content: "＞"; 
+  content: "▶︎"; 
   font-weight:900;
-  color: #67b44a; 
+  color: #ffffff; 
   transform: scale(0.7,0.5) rotate(90deg); /* transformはまとめて書かないとうまく表示されないことがある */
+  transition: 0.2s;
 }                  /* ＞を90度傾けて下に向けます */
 .div-menu-nav .menu-tab a .clicked::before{
   color: #dd5656; 
@@ -186,10 +189,11 @@ li .msg_menu {
 .div-menu-nav .box1{
   position: absolute; 
   background-color: #ffffff;
-  display: none;
+  opacity: 0;
   z-index: 9999;
   left:40px;
   top: 0em;
+  transition: 0.2s;
 }
 .div-menu-nav .menu-hover1{
   z-index:8888;
@@ -197,9 +201,11 @@ li .msg_menu {
 }
 .div-menu-nav .menu-hover1.clicked ~ .box1{ /* メニューをhoverすれば box1を表示 */
   display: block;
+  opacity: 1;
 }
 .div-menu-nav .box1.clicked {  /* 表示されたbox1をhoverすればそのままbox1を表示し続ける */
   display: block;           /* これがなければbox1が消えてしまう */
+  opacity: 1;
 }
 .div-menu-nav .box1 div{ /*各アイテムについて */
   background-color: #ffffff;
@@ -422,6 +428,14 @@ header {
 .dark li > .id {
   border-right: solid 1px #424242;
 }
+
+.dark .div-menu-nav a.clicked{
+  background-color:#454545; 
+}
+
+.dark .div-menu-nav .menu-tab a::before{
+  color: #ff7b00;
+}   
 
 .dark li h1 {
   padding: 0em;/*文字周りの余白*/

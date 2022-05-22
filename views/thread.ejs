@@ -13,6 +13,7 @@
       <title><%= thread.name %> - mf7cli-BBS</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" type="text/css" href="/style/style.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/push.js/0.0.11/push.min.js"></script>
       <script>
         function submit() {
           document.getElementById("login_form").submit();
@@ -20,6 +21,8 @@
         window.onload = () => {
           const lists = Array.from(document.querySelectorAll(".menu-click"));
           let opened_index = undefined;
+          
+            
           lists.forEach((elm) => {
             elm.addEventListener("click", () => {
               if(opened_index === undefined || opened_index !== [].slice.call(lists).indexOf(elm)){
@@ -98,9 +101,8 @@
           <input type="button" onclick="submit()" value="送信"/>
         </form>
         <ul>
-          <% for (var i = message.length - 1; i >= 0; i--) {%>
-            <%
-              
+          <%
+            for (var i = message.length - 1; i >= 0; i--) {
               // Source by https://qiita.com/saekis/items/c2b41cd8940923863791
               function escape_html (string) {
                 if(typeof string !== 'string') {
@@ -119,21 +121,36 @@
               }
             %>
             <% let messages = escape_html(message[i].text); %>
-            <% messages = md.render(messages); console.log(messages); %>
-            <%  %>
-            <li>
-              <div class="id"><a href="/users/<%= message[i].id %>">@<%= message[i].id %></a></div>
-              <div class="text"><%- messages %></div>
-              <div class="msg_menu">
-                <nav class="div-menu-nav">
-                  <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
-                  <div class="box1">
-                    <div><a class="delete_button">🗑削除</a></div>
-                  </div>
-                </nav>
-              </div>
-            </li>
-          <% } %>
+            <% 
+              messages = md.render(messages);
+              let account;
+            %>
+              <li>
+                <div class="id"><a href="/users/<%= message[i].id %>">@<%= message[i].id %></a></div>
+                <div class="text"><%- messages %></div>
+                <div class="msg_menu">
+                  <nav class="div-menu-nav">
+                    <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
+                    <div class="box1">
+                      <div><a class="delete_button">🗑削除</a></div>
+                      <div style="color: #252525; font-size: 12px; border-top: solid 1px #333333; margin: 0.5em;">
+                        <br/>
+                        <% if(message[i].date){
+                          let date = new Date(message[i].date);
+                          date.setHours(date.getHours() + 9)
+                        %>
+                          送信された日時: <%- date.getFullYear() %>/<%- date.getMonth() + 1 %>/<%- date.getDate() %> <%- date.getHours() %>:<%- date.getMinutes() %>
+                        <% } else { %>
+                          日付が保存されていないメッセージです。
+                        <% } %>
+                      </div>                      
+                    </div>
+                  </nav>
+                </div>
+              </li>
+            <%
+              }
+            %>
         </ul>
       </main>
       <footer>
