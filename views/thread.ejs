@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+    <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+      <meta property="og:url" content="https://bbs.mf7cli.tk"/>
+      <meta property="og:type" content="article"/>
+      <meta property="og:title" content="<%= thread.name %> - Thread"/>
+      <meta property="og:description" content="ここはmf7cliさんの掲示板です。"/>
+      <meta property="og:image" content="https://bbs.mf7cli.tk/image/logo"/>
+      <meta property="og:site_name" content="mf7cli-BBS" />
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <title><%= thread.name %> - mf7cli-BBS</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" type="text/css" href="/style/style.css">
+      <script>
+        function submit() {
+          document.getElementById("login_form").submit();
+        }
+        window.onload = () => {
+          const lists = Array.from(document.querySelectorAll(".menu-click"));
+          let opened_index = undefined;
+          lists.forEach((elm) => {
+            elm.addEventListener("click", () => {
+              if(opened_index === undefined || opened_index !== [].slice.call(lists).indexOf(elm)){
+                let lists2 = document.querySelectorAll('.menu-hover1');
+                opened_index = [].slice.call(lists).indexOf(elm);
+                console.log(opened_index);
+                if(document.getElementsByClassName("clicked")[0] !== undefined && document.getElementsByClassName("clicked")[0] !== undefined){ 
+                  document.getElementsByClassName("clicked")[0].classList.remove('clicked');
+                  document.getElementsByClassName("clicked")[0].classList.remove('clicked');
+                }
+                elm.classList.toggle('clicked');
+                lists2[opened_index].classList.toggle('clicked');
+              }
+              else{
+                let lists2 = document.querySelectorAll('.menu-hover1');
+                console.log(opened_index);
+                lists[opened_index].classList.remove('clicked');
+                lists2[opened_index].classList.remove('clicked');
+                opened_index = undefined;
+              }
+            });
+          });
+
+          const lists2 = Array.from(document.querySelectorAll(".box1 .delete_button"));
+
+          lists2.forEach((elm) => {
+            elm.addEventListener("click", () => {
+              index = [].slice.call(lists2).indexOf(elm);
+              console.log(index);
+              post('/<%= thread.name %>/delete', {message_num: index})
+            });
+          });
+        }
+        // Source by https://bbs.mf7cli.tk/chat1
+        function post(path, params, method='post') {
+          // The rest of this code assumes you are not using a library.
+          // It can be made less wordy if you use one.
+          const form = document.createElement('form');
+          form.method = method;
+          form.action = path;
+        
+          for (const key in params) {
+            if (params.hasOwnProperty(key)) {
+              const hiddenField = document.createElement('input');
+              hiddenField.type = 'hidden';
+              hiddenField.name = key;
+              hiddenField.value = params[key];
+        
+              form.appendChild(hiddenField);
+            }
+          }
+        
+          document.body.appendChild(form);
+          form.submit();
+          document.body.classList.remove("preload");
+        }
+      </script>
+    </head>
+  <body class="preload">
+    <div id="columnsBox">
+      <header>
+        <%- include('header.ejs') %>
+      </header>
+      <h1>mf7cli-BBS (<%= include('version.ejs') %>)</h1>
+      <main>
+        <a href="/">Home</a>
+        <br/>
+        <h2><%= thread.name %></h2>
+        <% if(status){ %>
+          <%= status %>
+        <% } %>
+        <br/>
+        <form method="post" action="/<%= thread.name %>">
+          <textarea placeholder="テキストを入力してください。" class="submit_text" maxlength="150" id="submit_text0" name="submit_text"></textarea>
+          <br/>
+          <input type="button" onclick="submit()" value="送信"/>
+        </form>
+        <ul>
+          <% for (var i = message.length - 1; i >= 0; i--) {%>
+            <%
+              
+              // Source by https://qiita.com/saekis/items/c2b41cd8940923863791
+              function escape_html (string) {
+                if(typeof string !== 'string') {
+                  return string;
+                }
+                return string.replace(/[&'`"<>]/g, function(match) {
+                  return {
+                    '&': '&amp;',
+                    "'": '&#x27;',
+                    '`': '&#x60;',
+                    '"': '&quot;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                  }[match]
+                });
+              }
+            %>
+            <% let messages = escape_html(message[i].text); %>
+            <% messages = md.render(messages); console.log(messages); %>
+            <%  %>
+            <li>
+              <div class="id"><a href="/users/<%= message[i].id %>">@<%= message[i].id %></a></div>
+              <div class="text"><%- messages %></div>
+              <div class="msg_menu">
+                <nav class="div-menu-nav">
+                  <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
+                  <div class="box1">
+                    <div><a class="delete_button">🗑削除</a></div>
+                  </div>
+                </nav>
+              </div>
+            </li>
+          <% } %>
+        </ul>
+      </main>
+      <footer>
+        <%- include('footer.ejs') %>
+      </footer>
+    </div>
+    <div id="statusColumn">
+      <%- include('status.ejs', {message_length: message.length}) %>
+    </div>    
+  </body>
+</html>

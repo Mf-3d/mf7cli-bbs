@@ -1,0 +1,39 @@
+<div class="toggle_switch" id="theme_switch">
+    <input type="checkbox" name="xxx" id="cb_toggle_switch" checked/>
+    <label for="cb_toggle_switch"></label>
+</div>
+<script>
+  const prefersColorSchemeDark = matchMedia(
+    '(prefers-color-scheme: dark)'
+  ).matches;
+
+  console.log(localStorage.getItem("theme"));
+  
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.className = 'dark';
+    document.getElementById("cb_toggle_switch").checked = false;
+    localStorage.setItem('theme', 'dark');
+  } else if(localStorage.getItem("theme") === "light") {
+    document.body.className = '';
+    document.getElementById("cb_toggle_switch").checked = true;
+    localStorage.setItem('theme', 'light');
+  }
+  else {
+    document.body.className = 'dark';
+    document.getElementById("cb_toggle_switch").checked = false;
+    localStorage.setItem('theme', 'dark');
+  }
+  
+  document.getElementById("cb_toggle_switch").onchange = () => {
+    console.log("ライトかどうか:",document.getElementById("cb_toggle_switch").checked)
+    if (document.getElementById("cb_toggle_switch").checked === false) {
+      document.body.className = 'dark';
+      localStorage.setItem('theme', 'dark');
+    } 
+    else if(document.getElementById("cb_toggle_switch").checked === true) {
+      document.body.className = '';
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+</script>

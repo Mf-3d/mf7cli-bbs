@@ -1,0 +1,455 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100&display=swap');
+
+@media only screen and (max-width:768px) {
+  .submit_text {
+    width: 90%!important;
+  }
+  #columnsBox {
+    width: 90%!important;
+  }
+  #statusColumn {
+    display: none!important;
+  }
+  li > .id {
+    width: 100px!important;
+  }
+}
+@media only screen and (max-width: 940px) {
+  li .msg_menu {
+    width: 10%!important;
+  }
+}
+
+.preload {
+  transition: 0s!important;
+}
+
+.badges {
+  background: #dbebf8;
+  border-radius: 5px;
+  padding: 1em;
+  width: 150px;
+  text-align: center;
+  display: inline-block; 
+  _display: inline;
+}
+
+html{
+  padding: 2em;
+  font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
+}
+
+body {
+  background: #fafafa;
+  display: flex;
+  transition: 0.5s;
+}
+
+footer {
+  position: fixed;
+  background: #fafafa;
+  padding: 1em;
+  margin: 0em;
+  left: 0em;
+  bottom: 0em;
+  padding-bottom: 1em;
+  width: 100%;
+  transition: 0.5s;
+  z-index: 9999;
+}
+
+#statusColumn {
+  width: 25%;
+  padding-top: 8em;
+  padding: 1em;
+  border-left: solid 1px #adb8c7;
+  position: fixed;
+  right: 0em;
+  height: 80%;
+}
+
+#columnsBox {
+  width: 75%;
+}
+
+h1 {
+  padding: 0.5em;/*文字周りの余白*/
+  color: #494949;/*文字色*/
+  border-left: solid 5px #1e366a;/*左線（実線 太さ 色）*/
+}
+
+main {
+  padding-left: 0.5em;/*文字周りの余白*/
+  transition: 0.5s;
+}
+
+img {
+  border-radius: 30px;
+  width: 100px;
+}
+
+ul, ol {
+  padding: 0;
+}
+
+ul li {
+  position: relative;
+  list-style-type: none!important;/*ポチ消す*/
+  padding: 0.5em;
+  margin-bottom: 5px;
+  line-height: 1.5;
+  background: #dbebf8;
+  vertical-align: middle;
+  color: #505050;
+  border-radius:  0px 15px 15px 0px;/*左側の角丸く*/
+  transition: 0.5s;
+  width: 90%;
+}
+
+li{
+  white-space: none;
+  display: flex;
+  word-break: break-word;
+}
+
+li > .id {
+  padding-right: 1em;
+  border-right: solid 1px #adb8c7;
+  width: 20%;
+}
+
+li > .text {
+  padding-left: 1em;
+  width: 75%;
+}
+
+li .msg_menu {
+  width: 5%;
+  z-index: 4;
+}
+
+/* Source by https://programming-cafe.com/programming/html-css/div-dropdown-menu/#toc1 */
+.div-menu-nav{
+  position: relative; /* 子要素においてabsoluteを用いるため指定する */
+  font-size:14px;
+  right: 0em;
+  width: 25px;
+  height: 25px;
+  margin: none;
+  z-index:8888; /* 最上位に表示する 一部の見出しがプルダウンの上に表示されてしまうことの対策 */
+}
+.div-menu-nav .menu-tab{
+  display: inline-block; /* メニュータブを横並びにする */
+  width: 25px;
+}
+.div-menu-nav a{
+  display: block; 
+  padding: 10px 0px; 
+  width: 35px; 
+  height: 15px;
+  color: #343434; 
+  text-decoration: none;
+  user-select: none;  
+}
+.box1 a {
+  width: 100%;
+}
+.menu-tab a {
+  position: absolute; 
+  border-radius: 50%;
+  top: -0.25em;
+}
+.div-menu-nav a.clicked{
+  background-color:#454545; 
+}
+.div-menu-nav a::before{　/* タブの左側のアクセントの変化の指定 ↓ */
+  display: inline-block;
+  content: "■"; 
+  color: #67b44a; 
+  transform: scaleX(0.4); /* 長方形を表示するにはborder 4pxなどの方法もありますが■をX方向に縮小する方法が楽です */
+}
+.div-menu-nav a.clicked::before{
+  content: "＞"; 
+  color: #dd5656; 
+}
+.div-menu-nav .menu-tab a::before{
+  display: inline-block;
+  content: "＞"; 
+  font-weight:900;
+  color: #67b44a; 
+  transform: scale(0.7,0.5) rotate(90deg); /* transformはまとめて書かないとうまく表示されないことがある */
+}                  /* ＞を90度傾けて下に向けます */
+.div-menu-nav .menu-tab a .clicked::before{
+  color: #dd5656; 
+}                          /* アクセント指定ここまで */
+.div-menu-nav .box1{
+  position: absolute; 
+  background-color: #ffffff;
+  display: none;
+  z-index: 9999;
+  left:40px;
+  top: 0em;
+}
+.div-menu-nav .menu-hover1{
+  z-index:8888;
+  text-align: center;
+}
+.div-menu-nav .menu-hover1.clicked ~ .box1{ /* メニューをhoverすれば box1を表示 */
+  display: block;
+}
+.div-menu-nav .box1.clicked {  /* 表示されたbox1をhoverすればそのままbox1を表示し続ける */
+  display: block;           /* これがなければbox1が消えてしまう */
+}
+.div-menu-nav .box1 div{ /*各アイテムについて */
+  background-color: #ffffff;
+  width:130px;
+}
+.div-menu-nav .menu-hover2.clicked ~ .box2{ /* box2についても同様 */
+  display: block;
+}
+.div-menu-nav .box2.clicked{
+  display: block;
+}
+.div-menu-nav .box2 div{
+  background-color: #ffffff;
+  width:130px;
+}
+
+ul li:before{ 
+  display:inline-block; 
+  vertical-align: middle;
+}
+
+.green {
+  background: #ddf8e1;
+}
+
+a {
+  color: #3d66e1;
+  text-decoration: none;
+}
+
+.submit_text {
+  font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
+  width: 40%;
+  border: solid #878787 1px;
+  border-radius: 15px 15px 15px 0px;
+  padding: 1em;
+  resize: none;
+  height: 100px;
+  background: #fafafa;
+}
+
+input[type="text"] {
+  width: 250px;
+  border: solid #878787 1px;
+  border-radius: 15px 15px 15px 0px;
+  padding: 1em;
+  margin-bottom: 1em;
+  background: #fafafa;
+}
+
+input[type="password"] {
+  width: 250px;
+  border: solid #878787 1px;
+  border-radius: 15px 15px 15px 0px;
+  padding: 1em;
+  margin-bottom: 1em;
+  background: #fafafa;
+}
+
+input[type="email"] {
+  width: 250px;
+  border: solid #878787 1px;
+  border-radius: 15px 15px 15px 0px;
+  padding: 1em;
+  margin-bottom: 1em;
+  background: #fafafa;
+}
+
+input[tyoe="submit"]{
+  
+}
+
+input{
+  font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
+  background: #ffffff;
+  color: #252525;
+  border: solid #878787 1px;
+  border-radius: 10px; 
+  background: #fafafa;
+}
+
+/* @media (prefers-color-scheme: dark) {
+  body {
+    background: #252525;
+    color: #fafafa;
+  }
+
+  h1 {
+    border-left: solid 5px #ff7b00;
+    color: #f0f0f0;
+  }
+
+  a {
+    color: #ff7b00;
+  }
+
+  ul li {
+    background: #333333;
+    color: #f0f0f0;
+  }
+
+  input {
+    background: #252525;
+    color: #f0f0f0;
+    border: solid  #505050 1px;
+    border-radius: 10px;    
+  }
+
+  .submit_text {
+    background: #252525;
+    color: #f0f0f0;
+    border: solid  #505050 1px;
+  }
+} */
+
+p {
+  margin: 0;
+}
+
+h2 {
+  margin: 0;
+}
+
+header {
+  margin-top: -2.5em;
+  margin-left: -2em;
+  width: 100%;
+  position: fixed;
+  background: #fafafa;
+  padding: 1em;
+  z-index: 3;
+  transition: 0.5s;
+  z-index: 9999;
+}
+
+.toggle_switch {
+  top: 2em;
+  right: 2em;
+  display: table;
+  font-size: 20px;
+}
+
+.toggle_switch > input {
+    display: none;
+}
+
+.toggle_switch > label {
+    display: block;
+    position: relative;
+    width: 1.8em;
+    height: 1em;
+    border-radius: 1em;
+    background-color: #4f52a1;
+    cursor: pointer;
+}
+.toggle_switch > input:checked + label {
+    background-color: #2dc2cd;
+}
+.toggle_switch > label::before {
+    position: absolute;
+    top: 0.05em;
+    left: 0.05em;
+    width: calc(1em - 0.1em);
+    height: calc(1em - 0.1em);
+    border-radius: calc(1em - 0.1em);
+    background-color: #fff;
+    transition: 0.5s;
+    content: "";
+}
+.toggle_switch > input:checked + label::before {
+    left: calc(100% - 1em + 0.05em);
+}
+
+/* ダークモード */
+.dark {
+  background: #252525;
+  color: #fafafa;
+}
+
+.dark header {
+  background: #252525;
+  color: #fafafa;
+}
+
+.dark h1 {
+  border-left: solid 5px #ff7b00;
+  color: #f0f0f0;
+}
+
+.dark a {
+  color: #ff7b00;
+}
+
+.dark footer {
+  background: #252525;
+}
+
+.dark ul li {
+  background: #333333;
+  color: #f0f0f0;
+}
+
+.dark input {
+  background: #252525;
+  color: #f0f0f0;
+  border: solid  #505050 1px;
+  border-radius: 10px;    
+}
+
+.dark .badges {
+  background: #333333;
+}
+
+.dark .submit_text {
+  background: #252525;
+  color: #f0f0f0;
+  border: solid  #505050 1px;
+}
+
+.dark li > .id {
+  border-right: solid 1px #424242;
+}
+
+.dark li h1 {
+  padding: 0em;/*文字周りの余白*/
+  color: #f0f0f0;
+  border-left: none;
+}
+
+.dark #statusColumn {
+  border-left: solid 1px #424242;
+}
+
+.dark li .select_box::after{
+  border-bottom:#ff7b00 2px solid;
+  border-right:#ff7b00 2px solid;
+}
+
+li h1 {
+  padding: 0em;/*文字周りの余白*/
+  color: #494949;/*文字色*/
+  border-left: none;
+  font-size: 1.5em;
+}
+
+li h2 {
+  font-size: 1.4em;
+}
+
+li img {
+  border-radius: 5px;
+  width: 200px;
+}

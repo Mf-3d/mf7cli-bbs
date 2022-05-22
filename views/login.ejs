@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+    <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+    <meta property="og:url" content="https://bbs.mf7cli.tk"/>
+    <meta property="og:type" content="article"/>
+    <meta property="og:title" content="Login"/>
+    <meta property="og:description" content="ここはmf7cliさんの掲示板です。"/>
+    <meta property="og:image" content="https://bbs.mf7cli.tk/image/logo"/>
+    <meta property="og:site_name" content="mf7cli-BBS" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Login - mf7cli-BBS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/style/style.css">
+    <script>
+      function submit() {
+        document.getElementById("login_form").submit();
+      }
+    </script>
+    <script>
+      window.onload = () => {
+        document.body.classList.remove("preload");
+      }
+    </script>
+  </head>
+  <body class="preload">
+    <div id="columnsBox">
+      <header>
+        <%- include('header.ejs') %>
+      </header>
+      <h1>mf7cli-BBS (<%= include('version.ejs') %>)</h1>
+      <main>
+        <a href="/">Home</a>
+        <h2>login</h2>
+        <ul>
+          <%= status %>
+          <form method="post" action="/login" id="login_form">
+            <input type="text" min="5" placeholder="名前を入力してください。" id="submit_id" name="submit_id"/>
+            <br/>
+            <input type="password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
+            <br/>
+            <input type="button" onclick="submit()" value="送信"/>
+          </form>
+          まだアカウントをお持ちではないですか？<a href="/register">Register</a>
+        </ul>
+      </main>
+      <% if(redirect_uri){ %>
+        <script>
+          setTimeout(function(){
+            window.location.href = '<%= redirect_uri %>';
+          }, 2*1000);
+        </script>
+      <% } %>
+      <footer>
+        <%- include('footer.ejs') %>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+    <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+      <meta property="og:url" content="https://bbs.mf7cli.tk"/>
+      <meta property="og:type" content="article"/>
+      <meta property="og:title" content="Settings - Thread"/>
+      <meta property="og:description" content="ここはmf7cliさんの掲示板です。"/>
+      <meta property="og:image" content="https://bbs.mf7cli.tk/image/logo"/>
+      <meta property="og:site_name" content="mf7cli-BBS" />
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <title>Settings - mf7cli-BBS</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" type="text/css" href="/style/style.css">
+      <script>
+        window.onload = () => {
+          document.body.classList.remove("preload");
+        }
+      </script>
+    </head>
+  <body class="preload">
+    <div id="columnsBox">
+      <header>
+        <%- include('header.ejs') %>
+      </header>
+      <h1>mf7cli-BBS (<%= include('version.ejs') %>)</h1>
+      <main>
+        <a href="/">Home</a>
+        <% console.log(api_key) %>
+        <br/>
+        <h2>Settings</h2>
+        <br/>
+        <% if(status){ %>
+          <%= status %>
+        <% } %>
+        <br/>
+        <%= account.id %>でログイン中
+        <h3>プロフィールの設定</h3>
+        <a href="/settings/profile">プロフィールの設定はこちらから行ってください</a>
+        <h3>パスワード変更</h3>
+        <form method="post" action="/settings/change_password">
+          <input type="password" placeholder="現在のパスワードを入力してください。" minlength="8" id="submit_password" name="submit_password"/>
+          <br/>
+          <input type="password" placeholder="新しいのパスワードを入力してください。" minlength="8" id="submit_new_password" name="submit_new_password"/>
+          <br/>
+          <input type="submit" value="送信">
+        </form>
+        <h3>APIキー</h3>
+        <ul>
+          <% if(api_key !== ""){ %>
+            <li><%= api_key %></li>
+            <a href="/settings/get_api_key">再生成</a>
+          <% } else{ %>
+            <a href="/settings/get_api_key">生成</a>
+          <% } %>
+        </ul>
+        <h3>メールアドレス変更</h3>
+        <% if(account.email !== undefined){ %>
+          <%= account.email %>で登録されています。
+        <% }else{ %>
+          メールアドレスが追加されていません。
+        <% } %>
+        <form method="post" action="/settings/change_email">
+          <input type="email" placeholder="メールアドレスを入力してください。" minlength="8" id="submit_text" name="submit_text"/>
+          <br/>
+          <input type="submit" value="送信">
+        </form>
+        <br/>
+      </main>
+      <footer>
+        <%- include('footer.ejs') %>
+      </footer>
+    </div>
+  </body>
+</html>
