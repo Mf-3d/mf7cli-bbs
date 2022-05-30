@@ -30,6 +30,9 @@
         <br/>
         <h2>@<%= account.id %>さんのプロフィール</h2>
         <br/>
+        <% if(!account.icon) account.icon = "/image/default_icon" %>
+        <img style="width: 100px; height: 100px;" src="<%= account.icon %>"/>
+        <br/>
         <h3>自己紹介</h3>
         <ul>
           <% if(account.bio){ %>

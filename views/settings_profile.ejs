@@ -48,6 +48,19 @@
           <br/>
           <input type="submit" value="送信"/>
         </form>
+        <h3>アイコン</h3>
+        <form method="POST" enctype="multipart/form-data" action="/upload/icon">
+          ファイルサイズの上限は1MBです。
+          <br/>
+          <input type="file" id="img_file" name="img_file" class="form-control" />
+          <input type="submit" value=" 送信 " />
+        </form>
+        <br/>
+        <img src="<%= account.icon %>"/>        
+        <br/>
+        リンク(読み取り専用): 
+        <input placeholder="アイコンのリンクがありません" type="text" maxlength="100" id="submit_text0" name="submit_text" value="<%= account.icon %>" disabled/>
+        <br/>
         <br/>
       </main>
       <footer>

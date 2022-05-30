@@ -1,0 +1,11 @@
+ファイルサイズの上限は1MBです。
+<form id="form1" method="POST" enctype="multipart/form-data" action="/upload/img">
+    <fieldset class="form-group">
+        <label for="img_file">アップロードファイル (1)</label>
+        <input type="file" id="img_file" name="img_file" class="form-control" />
+    </fieldset>
+    <fieldset class="form-group">
+        <input type="submit" id="submitButton" name="submitButton" class="btn btn-primary" value=" 送信 " />
+    </fieldset>
+</form>
+<p class="message" id="message"><%= message %></p>

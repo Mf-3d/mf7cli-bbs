@@ -38,7 +38,7 @@
         <ul>
           <%= status %>
           <form method="post" action="/register">
-            <input type="text" min="5" placeholder="名前を入力してください。" id="submit_id" name="submit_id"/>
+            <input type="text" min="5" placeholder="IDを入力してください。" id="submit_id" name="submit_id"/>
             <br/>
             <input type="password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
             <br/>
@@ -48,6 +48,11 @@
           </form>
           既にアカウントをお持ちですか？<a href="/login">Login</a>
           <br/>
+          <br/>
+          <h3>注意</h3>
+          <ul>
+            <li>メールアドレス認証の有効期限は10分です。</li>
+          </ul>
           <br/>
           <h3>アカウントの要件</h3>
           <ul>

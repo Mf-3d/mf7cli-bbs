@@ -36,13 +36,19 @@
         <ul>
           <%= status %>
           <form method="post" action="/login" id="login_form">
-            <input type="text" min="5" placeholder="名前を入力してください。" id="submit_id" name="submit_id"/>
+            <input type="text" min="5" placeholder="IDを入力してください。" id="submit_id" name="submit_id"/>
             <br/>
             <input type="password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
             <br/>
             <input type="button" onclick="submit()" value="送信"/>
           </form>
           まだアカウントをお持ちではないですか？<a href="/register">Register</a>
+          <br/>
+          <br/>
+          ログインできない場合<br/>
+          <ul>
+            <li>メール認証を済ませているか確認してください。</li>
+          </ul>
         </ul>
       </main>
       <% if(redirect_uri){ %>

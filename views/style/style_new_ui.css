@@ -1,0 +1,49 @@
+#columnsBox {
+  padding-top: 3em;
+}
+
+.dark {
+  background: linear-gradient(45deg, #7671bc, #87b0a4, #84dbe1);
+  background-size: cover;
+  background-attachment: fixed;
+  animation: background_animation 20s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes background_animation {
+  0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+ul {
+  width: 100%;
+}
+
+ul.threads li {
+  position: relative;
+  list-style-type: none!important;
+  padding: 0.5em;
+  margin: 2px;
+  line-height: 1.5;
+  vertical-align: middle;
+  height: 100px;
+  width: 19.5%;
+  _display: inline;
+  display: inline-block;
+}
+
+ul li {
+  border-radius: 15px;
+}
+
+.dark ul li {
+  background: #30303085;
+  backdrop-filter: blur(7.5px);
+}
