@@ -502,7 +502,8 @@ app.get("/settings", async (req, res) => {
   res.render("./settings.ejs", {
     status: "",
     account: val,
-    api_key: val.api ? val.api.mf7cli.api_key : ""
+    api_key: val.api ? val.api.mf7cli.api_key : "",
+    serverConfig
   });
 });
 
@@ -532,23 +533,27 @@ app.get("/settings/get_api_key", (req, res) => {
         res.render("./settings.ejs", {
           status: "APIキーを生成しました",
           account: val,
-          api_key
+          api_key,
+          serverConfig
         });
       } else if (val.api) {
           res.render("./login.ejs", {
             status: "ログインしてください",
-            redirect_uri: null
+            redirect_uri: null,
+            serverConfig
           });
         } else {
           res.render("./login.ejs", {
             status: "ログインしてください",
-            redirect_uri: null
+            redirect_uri: null,
+            serverConfig
           });
         }
     } else {
       res.render("./login.ejs", {
         status: "ログインしてください",
-        redirect_uri: null
+        redirect_uri: null,
+        serverConfig
       });
     }
   });
@@ -635,7 +640,8 @@ app.post("/settings/change_password", (req, res) => {
     } else if (val === null) {
       res.render("./login.ejs", {
         status: "ログインしてください",
-        redirect_uri: null
+        redirect_uri: null,
+        serverConfig
       });
     }
   });
@@ -689,18 +695,21 @@ app.post("/settings/change_email", async (req, res) => {
             status: "確認用メールを送信しました。",
             account: val,
             api_key: "",
-            redirect_uri: "/"
+            redirect_uri: "/",
+            serverConfig
           });
         });
       } else if (userlist_match(await get_userlist(), "email", req.body.submit_text) >= 1) {
         console.log(req.cookies.id + "さんの入力したメールアドレスは既に使用されています。");
         if (val.api) {
           res.render("./register.ejs", {
-            status: "入力したメールアドレスは既に使用されています。"
+            status: "入力したメールアドレスは既に使用されています。",
+            serverConfig
           });
         } else {
           res.render("./register.ejs", {
-            status: "入力したメールアドレスは既に使用されています。"
+            status: "入力したメールアドレスは既に使用されています。",
+            serverConfig
           });
         }
       } else if (emailAuthQue.length > 5) {
@@ -709,34 +718,39 @@ app.post("/settings/change_email", async (req, res) => {
           res.render("./login.ejs", {
             // status: "登録に成功しました。\nログインしてください。"
             status: "現在メール認証の最大件数を超えています。10分ほど経ってから再度送信してください。",
-            redirect_uri: "/settings"
+            redirect_uri: "/settings",
+            serverConfig
           });
         } else {
           res.render("./login.ejs", {
             // status: "登録に成功しました。\nログインしてください。"
             status: "現在メール認証の最大件数を超えています。10分ほど経ってから再度送信してください。",
-            redirect_uri: "/settings"
+            redirect_uri: "/settings",
+            serverConfig
           });
         }
       } else if (val === null) {
         console.log(req.cookies.id + "さん、予期しないエラーが発生しました。");
         res.render("./login.ejs", {
           status: "予期しないエラーが発生しました。もう一度ログインしてください。",
-          redirect_uri: "/settings"
+          redirect_uri: "/settings",
+          serverConfig
         });
       }
       else {
         res.render("./login.ejs", {
           status: "予期しないエラーが発生しました。",
           account: val,
-          api_key: ""
+          api_key: "",
+          serverConfig
         });
       }
     } else {
       console.log(req.cookies.id + "さん、予期しないエラーが発生しました。");
       res.render("./login.ejs", {
         status: "予期しないエラーが発生しました。もう一度ログインしてください。",
-        redirect_uri: ""
+        redirect_uri: "",
+        serverConfig
       });
     }
   } else {
@@ -745,13 +759,15 @@ app.post("/settings/change_email", async (req, res) => {
       res.render("./settings.ejs", {
         status: "正しいメールアドレスを入力してください。",
         account: val,
-        api_key: val.api.mf7cli.api_key
+        api_key: val.api.mf7cli.api_key,
+        serverConfig
       });
     } else {
       res.render("./settings.ejs", {
         status: "正しいメールアドレスを入力してください。",
         account: val,
-        api_key: ""
+        api_key: "",
+        serverConfig
       });
     }
   }
@@ -765,7 +781,8 @@ app.get("/auth/:token", async (req, res) => {
     );
     res.render("./auth.ejs", {
       status: "予期せぬエラーが発生しました。",
-      account: checkToken()[checkToken().length - 1]
+      account: checkToken()[checkToken().length - 1],
+      serverConfig
     });
     return;
   }
@@ -788,7 +805,8 @@ app.get("/auth/:token", async (req, res) => {
   if (checkToken().length < 1) {
     console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
     res.render("./register.ejs", {
-      status: "Tokenが存在しなかったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
+      status: "Tokenが存在しなかったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。",
+      serverConfig
     });
     return;
   }
@@ -796,7 +814,8 @@ app.get("/auth/:token", async (req, res) => {
     console.log("誰かがメールアドレス認証の画面にきたよ");
     res.render("./auth.ejs", {
       status: "",
-      account: checkToken()[checkToken().length - 1]
+      account: checkToken()[checkToken().length - 1],
+      serverConfig
     });
   } else {
     console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
@@ -829,12 +848,14 @@ app.get("/auth/exist/:token", (req, res) => {
         console.log("誰かがメールアドレス認証の画面にきたよ");
         res.render("./auth_exist.ejs", {
           status: "",
-          account: checkToken()[checkToken().length - 1]
+          account: checkToken()[checkToken().length - 1],
+          serverConfig
         });
       } else {
         console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
         res.render("./register.ejs", {
-          status: "Tokenが存在しなかったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
+          status: "Tokenが存在しなかったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。",
+          serverConfig
         });
       }
     } else {
@@ -843,7 +864,8 @@ app.get("/auth/exist/:token", (req, res) => {
       );
       res.render("./auth.ejs", {
         status: "予期せぬエラーが発生しました。",
-        account: checkToken()[checkToken().length - 1]
+        account: checkToken()[checkToken().length - 1],
+        serverConfig
       });
     }
   });
@@ -903,14 +925,16 @@ app.post("/auth/exist/:token/auth", (req, res) => {
           });
           res.render("./login.ejs", {
             status: "メールアドレスの登録が完了しました。",
-            redirect_uri: "/"
+            redirect_uri: "/",
+            serverConfig
           });
         }
       } else {
         console.log(checkToken()[checkToken().length - 1].id + "さんがメールアドレス認証に失敗したよ。パスワードが違うみたいだね。");
         res.render("./auth.ejs", {
           status: "入力したパスワードと仮登録で使用したパスワードが一致しません。",
-          account: checkToken()[checkToken().length - 1]
+          account: checkToken()[checkToken().length - 1],
+          serverConfig
         });
       }
     } else {
@@ -919,7 +943,8 @@ app.post("/auth/exist/:token/auth", (req, res) => {
       );
       res.render("./auth.ejs", {
         status: "予期せぬエラーが発生しました。",
-        account: checkToken()[checkToken().length - 1]
+        account: checkToken()[checkToken().length - 1],
+        serverConfig
       });
     }
   });
@@ -953,13 +978,15 @@ app.post("/auth/:token/auth", (req, res) => {
         });
         res.render("./login.ejs", {
           status: "登録が完了しました。ログインしてください。",
-          redirect_uri: null
+          redirect_uri: null,
+          serverConfig
         });
       } else {
         console.log(checkToken()[checkToken().length - 1].id + "さんがメールアドレス認証に失敗したよ。パスワードが違うみたいだね。");
         res.render("./auth.ejs", {
           status: "入力したパスワードと仮登録で使用したパスワードが一致しません。",
-          account: checkToken()[checkToken().length - 1]
+          account: checkToken()[checkToken().length - 1],
+          serverConfig
         });
       }
     } else if ((await userlist_match(await get_userlist(), "id", checkToken()[checkToken().length - 1].id)) !== 0) {
@@ -975,7 +1002,8 @@ app.post("/auth/:token/auth", (req, res) => {
       );
       res.render("./auth.ejs", {
         status: "予期せぬエラーが発生しました。",
-        account: checkToken()[checkToken().length - 1]
+        account: checkToken()[checkToken().length - 1],
+        serverConfig
       });
     }
   });

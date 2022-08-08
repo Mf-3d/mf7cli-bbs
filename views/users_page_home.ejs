@@ -1,3 +1,17 @@
+<% 
+  if(typeof serverConfig === 'undefined') {
+    serverConfig = {
+      "server_name": "???",
+      "server_domain": "http://example.com",
+      "server_port": 3000,
+      "public_instance": false,
+      
+      "admin_user": "???",
+      
+      "maintenance": false
+    }
+  }
+%>
 <!doctype html>
 <html>
     <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">

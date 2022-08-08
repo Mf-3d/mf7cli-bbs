@@ -17,7 +17,7 @@
     <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
       <meta property="og:url" content="http://<%- serverConfig.server_domain %>"/>
       <meta property="og:type" content="article"/>
-      <meta property="og:title" content="<%= thread.name %> - Thread"/>
+      <meta property="og:title" content="<%= thread.name %> - <%- serverConfig.server_name %>"/>
       <meta property="og:description" content="ここは<%- serverConfig.admin_user %>さんの掲示板です。"/>
       <meta property="og:image" content="http://<%- serverConfig.server_domain %>/image/logo"/>
       <meta property="og:site_name" content="<%- serverConfig.server_name %>" />
@@ -507,7 +507,7 @@
       <%- include('header.ejs') %>
     </header>
     <div id="columnsBox">
-      <h1>mf7cli-BBS (<%= include('version.ejs') %>)</h1>
+      <h1><%- serverConfig.server_name %> (<%= include('version.ejs') %>)</h1>
       <main>
         <a href="/">Home</a>
         <br/>

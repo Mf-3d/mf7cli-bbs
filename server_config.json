@@ -1,5 +1,5 @@
 {
-  "server_name": "mf7cli-BBS official.",
+  "server_name": "mf7cli-BBS",
   "server_domain": "bbs.mf7cli.potp.me",
   "server_port": 3000,
   "public_instance": true,
