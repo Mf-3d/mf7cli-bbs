@@ -1,11 +1,11 @@
 <!doctype html>
 <html>
     <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
-      <meta property="og:url" content="https://bbs.mf7cli.tk"/>
+      <meta property="og:url" content="https://bbs.mf7cli.potp.me"/>
       <meta property="og:type" content="article"/>
       <meta property="og:title" content="<%= thread.name %> - Thread"/>
       <meta property="og:description" content="ここはmf7cliさんの掲示板です。"/>
-      <meta property="og:image" content="https://bbs.mf7cli.tk/image/logo"/>
+      <meta property="og:image" content="https://bbs.mf7cli.potp.me/image/logo"/>
       <meta property="og:site_name" content="mf7cli-BBS" />
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,6 +73,24 @@
         });
 
         window.addEventListener('DOMContentLoaded', (event) => {
+          function isIe() {
+            var ua = navigator.userAgent;
+            return ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1;
+          }
+
+          if(isIe()){
+            location.href = "https://www.google.com";
+          }
+        });
+
+        window.addEventListener('focus', () => {
+          socket.emit("woke-up", {
+            thread: {id: "<%= thread.name %>"}
+          });
+          console.log("focusされました。");
+        });
+        
+        window.onload = () => {
           let userAgent = window.navigator.userAgent.toLowerCase();
       
           if(userAgent.indexOf('msie') != -1 || userAgent.indexOf('trident') != -1) {
@@ -84,9 +102,10 @@
             setTimeout(() => {
               location.href = "https://www.google.com";
             }, 3000);
-          } else if(userAgent.indexOf('edge') != -1) {
+          } else if(userAgent.indexOf('edg') != -1) {
             console.log('mf7cli-BBS for Web (Browser: Edge)');
             browser = "edge";
+            const status_message = document.getElementById("status");
             console.warn("このサービスはMicrosoft Edgeをサポートしておりません。\nサポートを受けるには他のブラウザを使用して下さい。");
           } else if(userAgent.indexOf('chrome') != -1) {
             console.log('mf7cli-BBS for Web (Browser: Chrome)');
@@ -106,16 +125,11 @@
             browser = "unknown";
             console.warn("このサービスはこのブラウザをサポートしておりません。\nサポートを受けるには他のブラウザを使用して下さい。");
           }
-        });
-
-        window.addEventListener('focus', () => {
-          socket.emit("woke-up", {
+          
+          socket.emit("init", {
             thread: {id: "<%= thread.name %>"}
           });
-          console.log("focusされました。");
-        });
-        
-        window.onload = () => {
+          
           // function reconnectSocket() {
           //   if (!connected) {
           //     fetch("/ping", {})
@@ -133,6 +147,16 @@
             status_message.innerHTML = `${msg.text}`;
           });
 
+          socket.on("update-rss", (rss) => {
+            const rss_list = document.getElementById('rss_list');
+            rss_list.innerHTML = '';
+            for (let i = 0; i < rss.length; i++) {
+              let li = document.createElement("li");
+              li.innerHTML = `<a href="${rss[i].link}">${rss[i].title}</a>`;
+              rss_list.prepend(li);
+            }
+          });
+
           socket.on("update_all_messages", (data) => {
             if(data.thread.id === '<%= thread.name %>'){
               const messages = document.getElementById("messages");
@@ -141,7 +165,7 @@
                 const li = document.createElement("li");
                 const date = new Date(data.message[i].date);
                 let min;
-                date.setHours(date.getHours() + 9);
+                // date.setHours(date.getHours() + 9);
                 if(String(date.getMinutes()).length === 1){
                   min = "0" + date.getMinutes();
                 }
@@ -154,7 +178,7 @@
                   <br/>
                   <img src="/users/${data.message[i].id}/icon"/>
                 </div>
-                <div class="text">${data.message[i].text}</div>
+                <div class="text"></div>
                   <div class="msg_menu">
                     <nav class="div-menu-nav">
                       <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
@@ -171,6 +195,7 @@
                     </nav>
                   </div>
                 </div>`;
+                li.querySelector('.text').insertAdjacentHTML('afterbegin', data.message[i].text);
                 messages.prepend(li);
                 twemoji.parse(document.body);
               }
@@ -343,7 +368,7 @@
           let crruent_messages;
           let latest_messages;
 
-          fetch('/api/thread/<%= thread.name %>/')
+          fetch('/api/v1/thread/<%= thread.name %>/')
           .then(response => response.json())
           .then(data => {
             crruent_messages = data;
@@ -545,7 +570,7 @@
       </footer>
     </div>
     <div id="statusColumn">
-      <%- include('status.ejs', {message_length: message.length}) %>
+      <%- include('status.ejs', {message_length: msg_length}) %>
     </div>    
   </body>
 </html>

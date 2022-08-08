@@ -12,15 +12,16 @@ const upload = multer({
 });
 const sharp = require("sharp");
 const app = express();
-const http = require("http");
-const server = http.Server(app);
-const fs = require("fs");
+const http = require("node:http");
+const server = new http.Server(app);
+const fs = require("node:fs");
 const bodyParser = require("body-parser");
-const db_client = require("@replit/database");
+const DBClient = require("@replit/database");
 const cookieparser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
-
+const RssParser = require('rss-parser');
+const rssParser = new RssParser();
 // トークン用
 const uuidjs = require("uuidjs");
 // メッセージを自動更新するためのやつ
@@ -36,7 +37,7 @@ const md = require("markdown-it")({
   breaks: true,
   // リンクにするあれ
   linkify: true
-});
+}).use(require('markdown-it-highlightjs'));
 
 // 画像のあれ
 const check_image_validity = (file_path) => sharp(file_path).toBuffer();
@@ -66,7 +67,7 @@ const mailOptions = {
 const threads = JSON.parse(fs.readFileSync(__dirname + "/data/threads/threads.json"));
 
 // DBのクライアント
-const db = new db_client();
+const db = new DBClient();
 
 // なにこれ
 // 使われてる
@@ -88,7 +89,7 @@ setInterval(async () => {
     return;
   }
   val.forEach((value, index) => {
-    const limit_date = new Date(val[index]["date"]);
+    const limit_date = new Date(val[index].date);
     if (limit_date <= new Date()) {
       val.splice(index, 1);
       db.set("emailauthque", val);
@@ -99,13 +100,23 @@ setInterval(async () => {
 }, 30000);
 
 // ユーザーリストを表示
-async function get_userlist() {
-  return await db.list("users");
+function get_userlist() {
+  return db.list("users");
 }
 
 // 起動時に欲しい(?)
 (async () => {
   console.log(await get_userlist());
+
+  setInterval(() => {
+    rssParser.parseURL('https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf')
+    .then((feed) => {
+      io.emit("update-rss", feed.items.splice(0, 10));
+    })
+    .catch((error) => {
+      console.error('RSS 取得失敗', error);
+    });
+  }, 60000);
 })();
 
 // ユーザーリストにマッチしたやつ
@@ -119,7 +130,7 @@ async function userlist_match(list, key, findkey) {
       if (val !== null) {
         if (val[key]) {
           if (val[key] === findkey) {
-            result[result.length] = val["id"];
+            result[result.length] = val.id;
             console.log("一致したキー: ", val[key]);
           }
         }
@@ -138,7 +149,7 @@ async function userlist_match(list, key, findkey) {
       if (val !== null) {
         if (val[key]) {
           if (val[key] !== undefined && val[key] !== null) {
-            result[result.length] = val["id"];
+            result[result.length] = val.id;
             console.log("一致したキー: ", val[key]);
           }
         }
@@ -182,15 +193,6 @@ async function userlist_match(list, key, findkey) {
 //   db.delete("usersSorakime");
 //   console.log(val);
 // });
-
-// スリープはいずれ使う😟/ 処理がすべて止まるから使わないことをオススメする by 領域違反
-// horn
-function sleep(waitMsec) {
-  const startMsec = new Date();
-
-  // 指定ミリ秒間だけループさせる（CPUは常にビジー状態）
-  while (new Date() - startMsec < waitMsec);
-}
 
 function isAlphabet(str) {
   str = str ?? "";
@@ -250,16 +252,16 @@ app.use((req, res, next) => {
    * 例えば127.0.0.1などIPアドレス直打ちの場合は400を返して終了する.
    * 下のapp.get()は処理されない
    */
-  if (hostname.match("mf7cli.tk") !== null || hostname.match("mf7cli.tk") !== undefined) {
+  if (hostname.match("potp.me") !== null || hostname.match("potp.me") !== undefined) {
     next();
-  } else {
-    console.log(hostname);
-    res.send(`
-        <script>
-          location.href = "https://bbs.mf7cli.tk"
-        </script>
-      `);
+    return;
   }
+  console.log(hostname);
+  res.send(`
+    <script>
+      location.href = "https://bbs.mf7cli.potp.me"
+    </script>
+  `);
 });
 
 // お前まだいたのか(?)
@@ -297,6 +299,22 @@ app.get("/", async (req, res) => {
 
 // Socket.IOにしない(多分)
 app.get("/login", (req, res) => {
+  if(req.query.callback) {
+    if(!req.query.appName) {
+      res.send('URLのパラメータが足りていません。');
+      return;
+    }
+    res.render("./login_callback.ejs", {
+      status: "",
+      redirect_uri: null,
+      query: {
+        appName: req.query.appName,
+        callback: req.query.callback
+      }
+    });
+    
+    return;
+  }
   res.render("./login.ejs", {
     status: "",
     redirect_uri: null
@@ -343,58 +361,84 @@ app.get("/users/:user_id/icon", async (req, res) => {
 
 
 // あとでパスワードが一致がなんとかかんとか😟
-// app.post("/api/users/get_user/:user_id", async (req, res) => {
-//   if (!req.body.keys) {
-//     res.status(400);
-//     res.json({
-//       message: "必要なデータがありません。",
-//       req_data: req.body
-//     });
-//     return;
-//   }
-//   if (typeof req.body.keys !== "object") {
-//     res.status(400);
-//     res.json({
-//       message: "キーの形がObjectではありません。",
-//       req_data: req.body
-//     });
-//     return;
-//   }
-//   if (!req.body.keys[1]) {
-//     res.status(400);
-//     res.json({
-//       message: "パスワードがありません。",
-//       req_data: req.body
-//     });
-//     return;
-//   }
-//   const client_val = await db.get("users" + req.body.keys[0].toLowerCase());
-//   if (client_val === null) {
-//     res.status(400);
-//     res.json({
-//       message: "クライアントユーザーが存在しません。",
-//       req_data: req.body
-//     });
-//     return;
-//   }
-//   if (!bcrypt.compareSync(req.body.keys[1], client_val.password)) {
-//     res.status(400);
-//     res.send("クライアントユーザーのパスワードが存在しません。");
-//     return;
-//   }
-//   const val = await db.get("users" + req.params.user_id.toLowerCase());
-//   if (val === null) {
-//     res.status(404);
-//     res.send(req.params.user_id + "さんは存在しません。");
-//     return;
-//   }
-//   res.json({
-//     user_id: val.id,
-//     bio: val.bio,
-//     link: val.link,
-//     icon: val.icon,
-//   });
-// });
+app.get('/api/v1/users/:user_id', async (req, res) => {
+  const val = await db.get("users" + req.params.user_id.toLowerCase());
+  if (val === null) {
+    res.status(404);
+    res.json({
+      error: req.params.user_id + "さんは存在しません。"
+    });
+    return;
+  }
+  res.json({
+    user_id: val.id,
+    bio: val.bio,
+    link: val.link,
+    icon: val.icon,
+    badge: val.badge
+  });
+});
+app.post("/api/v1/users/get_user/:user_id", async (req, res) => {
+  if (!req.body.keys) {
+    res.status(400);
+    res.json({
+      message: "必要なデータがありません。",
+      req_data: req.body
+    });
+    return;
+  }
+  if (typeof req.body.keys !== "object") {
+    res.status(400);
+    res.json({
+      message: "キーの形がObjectではありません。",
+      req_data: req.body
+    });
+    return;
+  }
+  if (!req.body.keys[0]) {
+    res.status(400);
+    res.json({
+      message: "クライアントユーザーのIDがありません。",
+      req_data: req.body
+    });
+    return;
+  }
+  if (!req.body.keys[1]) {
+    res.status(400);
+    res.json({
+      message: "クライアントユーザーのパスワードがありません。",
+      req_data: req.body
+    });
+    return;
+  }
+  const client_val = await db.get("users" + req.body.keys[0].toLowerCase());
+  if (client_val === null) {
+    res.status(400);
+    res.json({
+      message: "クライアントユーザーが存在しません。",
+      req_data: req.body
+    });
+    return;
+  }
+  if (!bcrypt.compareSync(req.body.keys[1], client_val.password)) {
+    res.status(400);
+    res.send("クライアントユーザーのパスワードが一致しません。");
+    return;
+  }
+  const val = await db.get("users" + req.params.user_id.toLowerCase());
+  if (val === null) {
+    res.status(404);
+    res.send(req.params.user_id + "さんは存在しません。");
+    return;
+  }
+  res.json({
+    user_id: val.id,
+    bio: val.bio,
+    link: val.link,
+    icon: val.icon,
+    badge: val.badge
+  });
+});
 // 😟
 
 app.get("/logout", (req, res) => {
@@ -447,22 +491,22 @@ app.get("/settings/get_api_key", (req, res) => {
   db.get(user_id).then((val) => {
     if (val !== null) {
       if (req.cookies.password === val.password) {
-        let api_key = Math.floor(Math.random() * (999 - 100) + 100);
+        const api_key = Math.floor(Math.random() * (999 - 100) + 100);
         const user = {
-          id: val["id"],
-          password: val["password"],
-          api: val["api"],
-          email: val["email"],
-          bio: val["bio"],
-          link: val["link"],
-          badge: val["badge"],
-          icon: val["icon"]
+          id: val.id,
+          password: val.password,
+          api: val.api,
+          email: val.email,
+          bio: val.bio,
+          link: val.link,
+          badge: val.badge,
+          icon: val.icon
         };
         if (user.api === null || user.api === undefined) user.api = { mf7cli: { api_key: "" } };
         user.api.mf7cli.api_key = api_key;
 
         db.set(user_id, user).then(() => {
-          console.log(val["id"] + "さんがAPIキーを生成しました。");
+          console.log(val.id + "さんがAPIキーを生成しました。");
         });
 
         res.render("./settings.ejs", {
@@ -470,8 +514,7 @@ app.get("/settings/get_api_key", (req, res) => {
           account: val,
           api_key
         });
-      } else {
-        if (val.api) {
+      } else if (val.api) {
           res.render("./login.ejs", {
             status: "ログインしてください",
             redirect_uri: null
@@ -482,7 +525,6 @@ app.get("/settings/get_api_key", (req, res) => {
             redirect_uri: null
           });
         }
-      }
     } else {
       res.render("./login.ejs", {
         status: "ログインしてください",
@@ -497,26 +539,26 @@ app.post("/settings/change_password", (req, res) => {
   db.get(user_id).then((val) => {
     if (val !== null) {
       if (
-        req.body["submit_password"] === val.password &&
-        req.body["submit_new_password"].length >= 5 &&
-        req.body["submit_new_password"] !== val.password
+        bcrypt.compareSync(req.body.submit_password, val.password) &&
+        req.body.submit_new_password.length >= 5 &&
+        !bcrypt.compareSync(req.body.submit_new_password, val.password)
       ) {
         db.set(user_id, {
           id: req.cookies.id,
-          password: bcrypt.hashSync(req.body["submit_new_password"], 10),
+          password: bcrypt.hashSync(req.body.submit_new_password, 10),
           // あとで直す
-          api: val["api"],
-          email: val["email"],
-          bio: val["bio"],
-          link: val["link"],
-          badge: val["badge"],
-          icon: val["icon"]
-        }).then(() => {});
+          api: val.api,
+          email: val.email,
+          bio: val.bio,
+          link: val.link,
+          badge: val.badge,
+          icon: val.icon
+        });
 
-        console.log(val["id"] + "がパスワードを変更しました。");
+        console.log(val.id + "がパスワードを変更しました。");
         if (val.api) {
-          res.cookie("id", val["id"], { httpOnly: false });
-          res.cookie("password", req.body["submit_new_password"], { httpOnly: false });
+          res.cookie("id", val.id, { httpOnly: false });
+          res.cookie("password", req.body.submit_new_password, { httpOnly: false });
 
           res.render("./settings.ejs", {
             status: "パスワードの変更に成功しました",
@@ -524,8 +566,8 @@ app.post("/settings/change_password", (req, res) => {
             api_key: val.api.mf7cli.api_key
           });
         } else {
-          res.cookie("id", val["id"], { httpOnly: false });
-          res.cookie("password", req.body["submit_new_password"], { httpOnly: false });
+          res.cookie("id", val.id, { httpOnly: false });
+          res.cookie("password", req.body.submit_new_password, { httpOnly: false });
 
           res.render("./settings.ejs", {
             status: "パスワードの変更に成功しました",
@@ -533,7 +575,7 @@ app.post("/settings/change_password", (req, res) => {
             api_key: ""
           });
         }
-      } else if (req.cookies.password !== val.password && req.body["submit_password"] === val.password) {
+      } else if (req.cookies.password !== val.password && req.body.submit_password === val.password) {
         if (val.api) {
           res.render("./settings.ejs", {
             status: "パスワードが一致しません",
@@ -547,7 +589,7 @@ app.post("/settings/change_password", (req, res) => {
             api_key: ""
           });
         }
-      } else if (req.body["submit_new_password"] === val.password) {
+      } else if (req.body.submit_new_password === val.password) {
         if (val.api) {
           res.render("./settings.ejs", {
             status: "新しいパスワードは現在のパスワードではないものを指定してください",
@@ -561,34 +603,35 @@ app.post("/settings/change_password", (req, res) => {
             api_key: ""
           });
         }
+      } else {
+        res.render("./settings.ejs", {
+          status: "予期しないエラーが発生しました",
+          account: val,
+          api_key: ""
+        });
+
+        console.log(req.body);
       }
     } else if (val === null) {
-      if (val.api) {
-        res.render("./login.ejs", {
-          status: "ログインしてください",
-          redirect_uri: null
-        });
-      } else {
-        res.render("./login.ejs", {
-          status: "ログインしてください",
-          redirect_uri: null
-        });
-      }
+      res.render("./login.ejs", {
+        status: "ログインしてください",
+        redirect_uri: null
+      });
     }
   });
 });
 
 app.post("/settings/change_email", async (req, res) => {
-  if (email_pattern.test(req.body["submit_text"])) {
+  if (email_pattern.test(req.body.submit_text)) {
     const user_id = `users${req.cookies.id}`;
     const emailAuthQue = await db.get("emailauthque");
     const val = await db.get(user_id);
     if (emailAuthQue !== null && val !== null) {
-      if (emailAuthQue.length <= 5 && userlist_match(await get_userlist(), "email", req.body["submit_text"]) === 0) {
+      if (emailAuthQue.length <= 5 && userlist_match(await get_userlist(), "email", req.body.submit_text) === 0) {
         const date = new Date();
 
         emailAuthQue[emailAuthQue.length] = {
-          email: req.body["submit_text"],
+          email: req.body.submit_text,
           token: uuidjs.generate(),
           date: date.setMinutes(date.getMinutes() + 10),
           id: req.cookies.id,
@@ -602,7 +645,7 @@ app.post("/settings/change_email", async (req, res) => {
           console.log("登録時のキュー: ", emailAuthQue);
           console.log(req.cookies.id + "がメールアドレスを登録しようとしています。");
           mailOptions.subject = "【重要】アカウントのメールアドレス登録の確認";
-          mailOptions.to = req.body["submit_text"];
+          mailOptions.to = req.body.submit_text;
           mailOptions.html = `
           <html>
             <head>
@@ -617,7 +660,7 @@ app.post("/settings/change_email", async (req, res) => {
               <br/>
               以下のリンクからアカウントの確認を行ってください｡
               <br/>
-              <a href="https://bbs.mf7cli.tk/auth/exist/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
+              <a href="https://bbs.mf7cli.potp.me/auth/exist/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
             </body>
           </html>`;
 
@@ -629,7 +672,7 @@ app.post("/settings/change_email", async (req, res) => {
             redirect_uri: "/"
           });
         });
-      } else if (userlist_match(await get_userlist(), "email", req.body["submit_text"]) >= 1) {
+      } else if (userlist_match(await get_userlist(), "email", req.body.submit_text) >= 1) {
         console.log(req.cookies.id + "さんの入力したメールアドレスは既に使用されています。");
         if (val.api) {
           res.render("./register.ejs", {
@@ -661,7 +704,7 @@ app.post("/settings/change_email", async (req, res) => {
           status: "予期しないエラーが発生しました。もう一度ログインしてください。",
           redirect_uri: "/settings"
         });
-      } 
+      }
       else {
         res.render("./login.ejs", {
           status: "予期しないエラーが発生しました。",
@@ -694,55 +737,54 @@ app.post("/settings/change_email", async (req, res) => {
   }
 });
 
-app.get("/auth/:token", (req, res) => {
-  db.get("emailauthque").then((val) => {
-    if (val !== null) {
-      function checkToken() {
-        const result = [];
-        for (let i = 0; i <= val.length - 1; i++) {
-          console.log(i);
-          console.log("auth_data_value: ", val[i]);
-          if (val[i].token === req.params.token) {
-            result[result.length] = val[i];
-          }
-          if (i === val.length - 1) {
-            return result;
-          }
-        }
+app.get("/auth/:token", async (req, res) => {
+  const val = await db.get("emailauthque");
+  if (val === null) {
+    console.log(
+      checkToken()[checkToken().length - 1].id + "さんがメールアドレス認証に失敗したよ。予期せぬエラーが発生したみたいだ。"
+    );
+    res.render("./auth.ejs", {
+      status: "予期せぬエラーが発生しました。",
+      account: checkToken()[checkToken().length - 1]
+    });
+    return;
+  }
+  const checkToken = () => {
+    const result = [];
+    for (let i = 0; i <= val.length - 1; i++) {
+      console.log(i);
+      console.log("auth_data_value: ", val[i]);
+      if (val[i].token === req.params.token) {
+        result[result.length] = val[i];
       }
-
-      console.log(val[checkToken().length - 1]);
-
-      if (checkToken().length >= 1) {
-        if (val[checkToken().length - 1].link_exist === false) {
-          console.log("誰かがメールアドレス認証の画面にきたよ");
-          res.render("./auth.ejs", {
-            status: "",
-            account: checkToken()[checkToken().length - 1]
-          });
-        } else {
-          console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
-          res.render("./register.ejs", {
-            status:
-              "Tokenが新規登録用の物だったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
-          });
-        }
-      } else {
-        console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
-        res.render("./register.ejs", {
-          status: "Tokenが存在しなかったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
-        });
+      if (i === val.length - 1) {
+        return result;
       }
-    } else {
-      console.log(
-        checkToken()[checkToken().length - 1].id + "さんがメールアドレス認証に失敗したよ。予期せぬエラーが発生したみたいだ。"
-      );
-      res.render("./auth.ejs", {
-        status: "予期せぬエラーが発生しました。",
-        account: checkToken()[checkToken().length - 1]
-      });
     }
-  });
+  };
+
+  console.log(val[checkToken().length - 1]);
+
+  if (checkToken().length < 1) {
+    console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
+    res.render("./register.ejs", {
+      status: "Tokenが存在しなかったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
+    });
+    return;
+  }
+  if (val[checkToken().length - 1].link_exist === false) {
+    console.log("誰かがメールアドレス認証の画面にきたよ");
+    res.render("./auth.ejs", {
+      status: "",
+      account: checkToken()[checkToken().length - 1]
+    });
+  } else {
+    console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
+    res.render("./register.ejs", {
+      status:
+        "Tokenが新規登録用の物だったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
+    });
+  }
 });
 
 app.get("/auth/exist/:token", (req, res) => {
@@ -803,7 +845,7 @@ app.post("/auth/exist/:token/auth", (req, res) => {
       }
     };
     if (val !== null) {
-      if (bcrypt.compareSync(req.body["submit_password"], checkToken()[checkToken().length - 1].password)) {
+      if (bcrypt.compareSync(req.body.submit_password, checkToken()[checkToken().length - 1].password)) {
         if (checkToken()[checkToken().length - 1].api) {
           db.set(`users${checkToken()[checkToken().length - 1].id}`, {
             id: checkToken()[checkToken().length - 1].id,
@@ -879,7 +921,7 @@ app.post("/auth/:token/auth", (req, res) => {
       }
     }
     if (val !== null && (await userlist_match(await get_userlist(), "id", checkToken()[checkToken().length - 1].email)) === 0) {
-      if (bcrypt.compareSync(req.body["submit_password"], checkToken()[checkToken().length - 1].password)) {
+      if (bcrypt.compareSync(req.body.submit_password, checkToken()[checkToken().length - 1].password)) {
         db.set(`users${checkToken()[checkToken().length - 1].id}`, {
           id: checkToken()[checkToken().length - 1].id,
           password: checkToken()[checkToken().length - 1].password,
@@ -919,13 +961,181 @@ app.post("/auth/:token/auth", (req, res) => {
   });
 });
 
-app.post("/login", (req, res) => {
-  const user_id = `users${req.body["submit_id"][0].toLowerCase()}`;
+app.post('/api/v1/getHash', (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
   db.get(user_id).then((val) => {
-    if (val !== null && req.body["submit_id"][0].length >= 5) {
-      if (bcrypt.compareSync(req.body["submit_id"][1], val.password)) {
-        console.log(req.body["submit_id"][0] + "がログインしました");
-        res.cookie("id", req.body["submit_id"][0].toLowerCase(), {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (bcrypt.compareSync(req.body.submit_id[1], val.password)) {
+        console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータを比較しました");
+        res.json({
+          status: 0,
+          message: 'Password matched.',
+          hash: val.password
+        });    
+      }
+      else {
+        res.json({
+          status: -1,
+          message: 'Passwords do not match.'
+        }); 
+      }
+    }
+    else {
+      res.json({
+        status: -2,
+        message: 'User does not exist.'
+      }); 
+    }
+  });
+});
+
+app.post('/api/v1/compare', (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then((val) => {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (req.body.submit_id[1] === val.password) {
+        console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータを比較しました");
+        res.json({
+          status: 0,
+          message: 'Password matched.'
+        });    
+      }
+      else {
+        res.json({
+          status: -1,
+          message: 'Passwords do not match.'
+        }); 
+      }
+    }
+    else {
+      res.json({
+        status: -2,
+        message: 'User does not exist.'
+      }); 
+    }
+  });
+});
+
+app.post('/api/v1/user/data/get', (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then((val) => {
+    if(val !== null && req.body.submit_id[0].length >= 5) {
+      if(req.body.submit_id[1] === val.password) {
+        console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータにuser_dataを追加しました");
+
+        const Conf = require('conf');
+
+        const config = new Conf();
+
+        res.json({
+          status: 0,
+          message: 'Password matched.',
+          data: config.get(req.body.data.name)
+        });
+      } else {
+        res.json({
+          status: -1,
+          message: 'Passwords do not match.'
+        }); 
+      }
+    } else {
+      res.json({
+        status: -2,
+        message: 'User does not exist.'
+      }); 
+    }
+  });
+});
+
+app.post('/api/v1/user/data/add', (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then((val) => {
+    if(val !== null && req.body.submit_id[0].length >= 5) {
+      if(req.body.submit_id[1] === val.password) {
+        console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータにuser_dataを追加しました");
+        let path = req.body.data.name.split('.');
+
+        const Conf = require('conf');
+
+        const config = new Conf();
+        
+        config.set(req.body.data.name, req.body.data.data);
+
+        if(!val.user_data) val.user_data = {};
+        val.user_data[path[0]] = config.get(path[0]);
+        
+        res.json({
+          status: 0,
+          message: 'Password matched.',
+          data: config.get(path[0])
+        });
+
+        db.set(user_id, val);
+      }
+      else {
+        res.json({
+          status: -1,
+          message: 'Passwords do not match.'
+        }); 
+      }
+    }
+    else {
+      res.json({
+        status: -2,
+        message: 'User does not exist.'
+      }); 
+    }
+  });
+});
+
+app.post('/api/v1/user/data/delete', (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then((val) => {
+    if(val !== null && req.body.submit_id[0].length >= 5) {
+      if(req.body.submit_id[1] === val.password) {
+        console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータにuser_dataを追加しました");
+        let path = req.body.data.name.split('.');
+
+        const Conf = require('conf');
+
+        const config = new Conf();
+        
+        config.delete(req.body.data.name);
+        
+        if(!val.user_data) val.user_data = {};
+        val.user_data[path[0]] = config.get(path[0]);
+        
+        res.json({
+          status: 0,
+          message: 'Password matched.',
+          data: config.get(path[0])
+        });
+
+        db.set(user_id, val);
+      }
+      else {
+        res.json({
+          status: -1,
+          message: 'Passwords do not match.'
+        }); 
+      }
+    }
+    else {
+      res.json({
+        status: -2,
+        message: 'User does not exist.'
+      }); 
+    }
+  });
+});
+
+app.post("/login", (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then((val) => {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (bcrypt.compareSync(req.body.submit_id[1], val.password)) {
+        console.log(req.body.submit_id[0] + "がログインしました");
+        res.cookie("id", req.body.submit_id[0].toLowerCase(), {
           maxAge: 3e9,
           httpOnly: false
         });
@@ -938,14 +1148,14 @@ app.post("/login", (req, res) => {
           redirect_uri: "/"
         });
       } else {
-        console.log(req.body["submit_id"][0] + 'がログインに失敗しました。パスワードがDBのパスワードと一致しません。"');
+        console.log(req.body.submit_id[0] + 'がログインに失敗しました。パスワードがDBのパスワードと一致しません。"');
         res.render("./login.ejs", {
           status: "ログインに失敗しました。パスワードがDBのパスワードと一致しません。",
           redirect_uri: null
         });
       }
     } else {
-      console.log(req.body["submit_id"][0] + "は存在しません");
+      console.log(req.body.submit_id[0] + "は存在しません");
       res.render("./login.ejs", {
         status: "ユーザーが存在しません。",
         redirect_uri: null
@@ -954,9 +1164,45 @@ app.post("/login", (req, res) => {
   });
 });
 
+app.post("/login_callback", (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then((val) => {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (bcrypt.compareSync(req.body.submit_id[1], val.password)) {
+        console.log(req.body.submit_id[0] + "がログインしました");
+        res.cookie("id", req.body.submit_id[0].toLowerCase(), {
+          maxAge: 3e9,
+          httpOnly: false
+        });
+        res.cookie("password", val.password, {
+          maxAge: 3e9,
+          httpOnly: false
+        });
+        // res.render("./login.ejs", {
+        //   status: "ログインに成功しました。",
+        //   redirect_uri: `${req.body.callback}?user=${val.id}&password=${val.password}`
+        // });
+        res.send(`<script>location.href = '${req.body.callback}?user=${val.id}&password=${val.password}';</script>`)
+      } else {
+        console.log(req.body.submit_id[0] + 'がログインに失敗しました。パスワードがDBのパスワードと一致しません。"');
+        res.render("./login.ejs", {
+          status: "ログインに失敗しました。パスワードがDBのパスワードと一致しません。",
+          redirect_uri: '/'
+        });
+      }
+    } else {
+      console.log(req.body.submit_id[0] + "は存在しません");
+      res.render("./login.ejs", {
+        status: "ユーザーが存在しません。",
+        redirect_uri: '/'
+      });
+    }
+  });
+});
+
 app.post("/register", (req, res) => {
-  console.log(req.body["submit_id"][0]);
-  const user_id = `users${req.body["submit_id"][0].toLowerCase()}`;
+  console.log(req.body.submit_id[0]);
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
   db.get(user_id).then((val) => {
     db.list("users").then(async (matches) => {
       userlist = matches;
@@ -964,27 +1210,27 @@ app.post("/register", (req, res) => {
 
       if (
         val === null &&
-        req.body["submit_id"][0].length >= 5 &&
-        req.body["submit_id"][1].length >= 8 &&
-        isAlphabet(req.body["submit_id"][0]) &&
-        req.body["submit_id"][0].length <= 15 &&
-        req.body["submit_id"][2] &&
-        email_pattern.test(req.body["submit_id"][2]) &&
-        (await userlist_match(userlist, "email", req.body["submit_id"][2])) === 0 &&
-        (await userlist_match(userlist, "id", req.body["submit_id"][0])) === 0
+        req.body.submit_id[0].length >= 5 &&
+        req.body.submit_id[1].length >= 8 &&
+        isAlphabet(req.body.submit_id[0]) &&
+        req.body.submit_id[0].length <= 15 &&
+        req.body.submit_id[2] &&
+        email_pattern.test(req.body.submit_id[2]) &&
+        (await userlist_match(userlist, "email", req.body.submit_id[2])) === 0 &&
+        (await userlist_match(userlist, "id", req.body.submit_id[0])) === 0
       ) {
-        console.log("一致したメールアドレス: ", await userlist_match(await get_userlist(), "email", req.body["submit_id"][2]));
+        console.log("一致したメールアドレス: ", await userlist_match(await get_userlist(), "email", req.body.submit_id[2]));
         let emailAuthQue = await db.get("emailauthque");
         if (emailAuthQue !== null) {
           console.log(emailAuthQue);
           if (emailAuthQue.length <= 5) {
             const date = new Date();
             emailAuthQue[emailAuthQue.length] = {
-              email: req.body["submit_id"][2],
+              email: req.body.submit_id[2],
               token: uuidjs.generate(),
               date: date.setMinutes(date.getMinutes() + 10),
-              id: req.body["submit_id"][0],
-              password: bcrypt.hashSync(req.body["submit_id"][1], 10),
+              id: req.body.submit_id[0],
+              password: bcrypt.hashSync(req.body.submit_id[1], 10),
               link_exist: false,
               ip: req.ip
             };
@@ -1008,10 +1254,10 @@ app.post("/register", (req, res) => {
             // });
 
             db.set("emailauthque", emailAuthQue).then(() => {
-              console.log(req.body["submit_id"][0] + "が登録しようとしています");
+              console.log(req.body.submit_id[0] + "が登録しようとしています");
             });
             mailOptions.subject = "【重要】アカウント登録の確認";
-            mailOptions.to = req.body["submit_id"][2];
+            mailOptions.to = req.body.submit_id[2];
             mailOptions.html = `
             <html>
               <head>
@@ -1026,18 +1272,18 @@ app.post("/register", (req, res) => {
                 <br/>
                 以下のリンクからアカウントの確認を行ってください｡
                 <br/>
-                <a href="https://bbs.mf7cli.tk/auth/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
+                <a href="https://bbs.mf7cli.potp.me/auth/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
               </body>
             </html>`;
             transporter.sendMail(mailOptions);
-            console.log(req.body["submit_id"][0] + "が登録しようとしています");
+            console.log(req.body.submit_id[0] + "が登録しようとしています");
             res.render("./login.ejs", {
               status: "確認用メールを送信しました。",
               redirect_uri: "/"
             });
           } else {
             console.log(
-              req.body["submit_id"][0] +
+              req.body.submit_id[0] +
                 "が登録しようとしています。現在メール認証の最大件数を超えているためメールを送信できませんでした。"
             );
             res.render("./login.ejs", {
@@ -1049,11 +1295,11 @@ app.post("/register", (req, res) => {
         } else {
           emailAuthQue = [];
           emailAuthQue[emailAuthQue.length] = {
-            email: req.body["submit_id"][2],
+            email: req.body.submit_id[2],
             token: uuidjs.generate(),
             date: new Date(),
-            id: req.body["submit_id"][0],
-            password: bcrypt.hashSync(req.body["submit_id"][1], 10),
+            id: req.body.submit_id[0],
+            password: bcrypt.hashSync(req.body.submit_id[1], 10),
             link_exist: false
           };
 
@@ -1078,7 +1324,7 @@ app.post("/register", (req, res) => {
           // });
 
           db.set("emailauthque", emailAuthQue).then(() => {
-            console.log(req.body["submit_id"][0] + "が登録しようとしています");
+            console.log(req.body.submit_id[0] + "が登録しようとしています");
             res.render("./login.ejs", {
               // status: "登録に成功しました。\nログインしてください。"
               status: "確認用メールを送信しました。",
@@ -1086,7 +1332,7 @@ app.post("/register", (req, res) => {
             });
           });
 
-          mailOptions.to = req.body["submit_id"][2];
+          mailOptions.to = req.body.submit_id[2];
           mailOptions.html = `
           <html>
             <head>
@@ -1101,11 +1347,11 @@ app.post("/register", (req, res) => {
               <br/>
               以下のリンクからアカウントの確認を行ってください｡
               <br/>
-              <a href="https://bbs.mf7cli.tk/auth/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
+              <a href="https://bbs.mf7cli.potp.me/auth/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
             </body>
           </html>`;
           transporter.sendMail(mailOptions);
-          console.log(req.body["submit_id"][0] + "が登録しようとしています");
+          console.log(req.body.submit_id[0] + "が登録しようとしています");
           res.render("./login.ejs", {
             status: "確認用メールを送信しました。",
             redirect_uri: "/"
@@ -1118,28 +1364,28 @@ app.post("/register", (req, res) => {
           // console.log(req.body["submit_id"][0] + 'が登録しました');
         }
       } else if (val !== null) {
-        console.log(req.body["submit_id"][0] + "は存在します");
+        console.log(req.body.submit_id[0] + "は存在します");
         res.render("./register.ejs", {
-          status: req.body["submit_id"][0] + "は存在します。別の名前を指定してください。"
+          status: req.body.submit_id[0] + "は存在します。別の名前を指定してください。"
         });
-      } else if (req.body["submit_id"][0].length < 5 || req.body["submit_id"][1].length < 8 || req.body["submit_id"][0].length > 15) {
-        console.log(req.body["submit_id"][0] + "さん、要件を満たしていません。");
+      } else if (req.body.submit_id[0].length < 5 || req.body.submit_id[1].length < 8 || req.body.submit_id[0].length > 15) {
+        console.log(req.body.submit_id[0] + "さん、要件を満たしていません。");
         res.render("./register.ejs", {
           status: "パスワードかIDが要件を満たしていません。"
         });
-      } else if (!req.body["submit_id"][2] || !email_pattern.test(req.body["submit_id"][2])) {
-        console.log(req.body["submit_id"][0] + "さん、要件を満たしていません。");
+      } else if (!req.body.submit_id[2] || !email_pattern.test(req.body.submit_id[2])) {
+        console.log(req.body.submit_id[0] + "さん、要件を満たしていません。");
         res.render("./register.ejs", {
           status: "正しいメールアドレスを入力してください。"
         });
-      } else if ((await userlist_match(userlist, "email", req.body["submit_id"][2])) !== 0) {
-        console.log(req.body["submit_id"][0] + "さんの入力したメールアドレスは既に使用されています。");
-        console.log("リスト: ", userlist, "\n結果: ", await userlist_match(userlist, "email", req.body["submit_id"][2]));
+      } else if ((await userlist_match(userlist, "email", req.body.submit_id[2])) !== 0) {
+        console.log(req.body.submit_id[0] + "さんの入力したメールアドレスは既に使用されています。");
+        console.log("リスト: ", userlist, "\n結果: ", await userlist_match(userlist, "email", req.body.submit_id[2]));
         res.render("./register.ejs", {
           status: "入力したメールアドレスは既に使用されています。"
         });
-      } else if ((await userlist_match(userlist, "id", req.body["submit_id"][0])) !== 0) {
-        console.log(req.body["submit_id"][0] + "さんの入力したIDは既に使用されています。");
+      } else if ((await userlist_match(userlist, "id", req.body.submit_id[0])) !== 0) {
+        console.log(req.body.submit_id[0] + "さんの入力したIDは既に使用されています。");
         res.render("./register.ejs", {
           status: "入力したIDは既に使用されています。"
         });
@@ -1148,9 +1394,21 @@ app.post("/register", (req, res) => {
   });
 });
 
+app.get("/api/v1/thread", (req, res) => {
+  res.json({
+    threads: threads.threads
+  });
+});
+
+app.post("/api/v1/thread", (req, res) => {
+  res.json({
+    threads: threads.threads
+  });
+});
+
 // スレッド一覧を取得
 threads.threads.forEach((val) => {
-  const db_id = `messages${val}`;
+  // const db_id = `messages${val}`;
   // db.get(db_id).then(keys => {
   //   if (keys === null) {
   //     keys = {message:[]};
@@ -1163,18 +1421,87 @@ threads.threads.forEach((val) => {
   //   });
   // });
 
-  app.get(`/api/thread/${val}`, async (req, res) => {
+  app.get(`/api/v1/thread/${val}`, async (req, res) => {
     const db_id = `messages${val}`;
     let messages_db = await db.get(db_id);
     if (messages_db === null || messages_db === undefined) {
       messages_db = { message: [] };
-      messages_db["message"][0] = { id: "system", text: `ここは${val}です。`, pinned: true };
+      messages_db.message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
     }
+    
     messages[val] = messages_db;
-
     db.set(db_id, messages[val]);
 
-    res.json(messages[val]);
+    console.log(Number(req.query.start));
+    let start_length = Number(req.query.start);
+    let load_length = Number(req.query.length);
+    
+    if(typeof start_length !== 'number' || !req.query.start){
+      start_length = 0;
+    }
+    if(typeof load_length !== 'number' || !req.query.length){
+      load_length = 10;
+    }
+
+    if(start_length > messages[val].message.length - 1){
+      start_length = messages[val].message.length - 1;
+    }
+
+    if(load_length > messages[val].message.length){
+      load_length = messages[val].message.length;
+    }
+
+    if(start_length < load_length){
+      start_length = load_length;
+    }
+    
+    for (let i = start_length; i < start_length + load_length; i++) {
+      messages[val].message[i].text = md.render(String(messages[val].message[i].text));
+    }
+    
+    res.json(messages[val].message.splice(-start_length, load_length));
+  });
+
+  app.post(`/api/v1/thread/${val}`, async (req, res) => {
+    const db_id = `messages${val}`;
+    let messages_db = await db.get(db_id);
+    if (messages_db === null || messages_db === undefined) {
+      messages_db = { message: [] };
+      messages_db.message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
+    }
+    
+    messages[val] = messages_db;
+    db.set(db_id, messages[val]);
+
+    console.log(Number(req.query.start));
+    let start_length = Number(req.query.start);
+    let load_length = Number(req.query.length);
+    
+    if(typeof start_length !== 'number' || !req.query.start){
+      start_length = 0;
+    }
+    if(typeof load_length !== 'number' || !req.query.length){
+      load_length = 10;
+    }
+
+    if(start_length > messages[val].message.length - 1){
+      start_length = messages[val].message.length - 1;
+    }
+
+    if(load_length > messages[val].message.length){
+      load_length = messages[val].message.length;
+    }
+
+    if(start_length < load_length){
+      start_length = load_length;
+    }
+    
+    for (let i = start_length; i < start_length + load_length; i++) {
+      messages[val].message[i].text = md.render(String(messages[val].message[i].text));
+    }
+    
+
+    res.json(messages[val].message.splice(-start_length, load_length));
   });
 
   app.get(`/thread/${val}`, async (req, res) => {
@@ -1203,13 +1530,19 @@ threads.threads.forEach((val) => {
     const messages_db = await db.get(db_id);
     if (messages_db !== null && messages_db !== undefined) {
       messages[val] = await db.get(db_id);
-      messages[val]["message"][0] = { id: "system", text: `ここは${val}です。`, pinned: true };
+      messages[val].message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
       db.set(db_id, messages_db);
       const users_id = [];
       const user_icons = [];
-      for (let i = 0; i < messages[val]["message"].length; i++) {
-        messages[val]["message"][i].text = md.render(String(messages[val]["message"][i].text));
-        const user_id = messages[val]["message"][i]["id"];
+      let load_length = 5;
+
+      if(load_length > messages[val].message.length - 1){
+        load_length = messages[val].message.length;
+      }
+      
+      for (let i = 0; i < load_length; i++) {
+        messages[val].message[i].text = md.render(String(messages[val].message[i].text));
+        const user_id = messages[val].message[i].id;
 
         if (users_id.indexOf(user_id) === -1) {
           users_id[users_id.length] = user_id;
@@ -1226,7 +1559,8 @@ threads.threads.forEach((val) => {
 
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
-        message: messages[val]["message"],
+        message: messages[val].message.slice( -load_length ),
+        msg_length:  messages[val].message.length,
         status: "",
         md,
         db,
@@ -1238,7 +1572,7 @@ threads.threads.forEach((val) => {
       });
     } else {
       messages[val] = { message: [] };
-      messages[val]["message"][0] = { id: "system", text: `ここは${val}です。`, pinned: true };
+      messages[val].message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
 
       console.log(messages);
 
@@ -1247,7 +1581,8 @@ threads.threads.forEach((val) => {
 
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
-        message: messages[val]["message"],
+        message: messages[val].message.slice( -load_length ),
+        msg_length:  messages[val].message.length,
         status: "",
         md,
         db,
@@ -1894,7 +2229,7 @@ app.post("/settings/profile/set_bio", async (req, res) => {
     status: "",
     account: val
   });
-});;
+});
 
 // app.post("/settings/profile/set_icon", (req, res) => {
 //   let user_id = `users${req.cookies.id}`;
@@ -2033,7 +2368,7 @@ app.use((req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   res.status(500);
   res.end("500 error! : " + err);
 });
@@ -2047,6 +2382,30 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     online_device -= 1;
     console.log("現在観覧中のデバイス数:", online_device);
+  });
+
+  socket.on("init", async (datas) => {
+    const db_datas = await db.get("messages" + datas.thread.id);
+    for (let index = 0; index < db_datas.message.length; index++) {
+      if(typeof db_datas.message[index].text === 'string'){
+        // db_datas.message[index].text = escape_html(db_datas.message[index].text);
+        db_datas.message[index].text = md.render(db_datas.message[index].text);
+      }
+    }   
+    socket.emit("update_all_messages", {
+      message: db_datas.message,
+      thread: {
+        id: datas.thread.id
+      }
+    });
+
+    rssParser.parseURL('https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf')
+    .then((feed) => {
+      socket.emit("update-rss", feed.items.splice(0, 10));
+    })
+    .catch((error) => {
+      console.error('RSS 取得失敗', error);
+    });
   });
 
   socket.on("woke-up", async (datas) => {
@@ -2063,11 +2422,9 @@ io.on("connection", (socket) => {
             id: datas.thread.id
           }
         });
-      } else {
-        if (typeof db_datas.message[i].text === "string") {
+      } else if (typeof db_datas.message[i].text === "string") {
           db_datas.message[i].text = md.render(db_datas.message[i].text);
         }
-      }
     }
   });
 
@@ -2110,20 +2467,20 @@ io.on("connection", (socket) => {
     socket.emit("update_status", { text: "メッセージが入力されていることを確認しました。" });
     if (db_datas.message.length < max_msg) {
       socket.emit("update_status", { text: "メッセージの上限に達していません。" });
-  
+
       db_datas.message[db_datas.message.length] = {
         id: datas.user.id,
         text: escape_html(datas.msg.text),
         pinned: false,
         date: new Date()
       };
-  
+
       if (user_datas.icon === undefined) {
         user_datas.icon = "/image/default_icon";
       }
-  
+
       await db.set("messages" + datas.thread.id, db_datas);
-      db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
+      // db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
       socket.emit("update_status", { text: "メッセージを送信しました。" });
     } else {
       socket.emit("update_status", { text: "メッセージの上限に達しています。" });
@@ -2137,25 +2494,32 @@ io.on("connection", (socket) => {
         }
       };
       autoDeleteMessage();
-  
+
       db_datas.message[db_datas.message.length] = {
         id: datas.user.id,
         text: escape_html(datas.msg.text),
         pinned: false,
         date: new Date()
       };
-  
+
       if (user_datas.icon === undefined) {
         user_datas.icon = "/image/default_icon";
       }
-  
+
       await db.set("messages" + datas.thread.id, db_datas);
-      db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
+      // db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
       socket.emit("update_status", { text: "メッセージの上限に達していたため古いメッセージを削除しました。" });
     }
-    io.emit("update_messages", {
-      message: db_datas.message[db_datas.message.length - 1],
-      user: user_datas,
+    
+    for (let index = 0; index < db_datas.message.length; index++) {
+      if(typeof db_datas.message[index].text === 'string'){
+        // db_datas.message[index].text = escape_html(db_datas.message[index].text);
+        db_datas.message[index].text = md.render(db_datas.message[index].text);
+      }
+    }   
+    
+    io.emit("update_all_messages", {
+      message: db_datas.message,
       thread: {
         id: datas.thread.id
       }
@@ -2165,13 +2529,13 @@ io.on("connection", (socket) => {
   // val
   // これ追加しないとバグる
   socket.on("delete-msg", async (datas) => {
-    let db_id = `messages${datas.thread.id}`;
+    const db_id = `messages${datas.thread.id}`;
     db.get(db_id).then((keys) => {
       if (keys === null) {
         socket.emit("update_status", { text: "スレッドが存在しません。再読み込みをしてみてください。" });
       } else {
         messages[datas.thread.id] = keys;
-        db.set(db_id, messages[datas.thread.id]).then(() => {});
+        db.set(db_id, messages[datas.thread.id]);
       }
     });
 
@@ -2194,7 +2558,7 @@ io.on("connection", (socket) => {
             if(datas.user.password !== account.password) return;
             console.log(msg_data.id, "が", msg_data.text, "を削除しようとしています。");
             messages[datas.thread.id].message.splice(0 - (datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1)), 1);
-            
+
             db.set(db_id, messages[datas.thread.id]).then(() => {
               for (let i = 0; i < messages[datas.thread.id].message.length - 1; i++) {
                 if (i >= messages[datas.thread.id].message.length - 2) {
@@ -2205,19 +2569,17 @@ io.on("connection", (socket) => {
                       id: datas.thread.id
                     }
                   });
-                } else {
-                  if (typeof messages[datas.thread.id].message[i].text === "string") {
+                } else if (typeof messages[datas.thread.id].message[i].text === "string") {
                     messages[datas.thread.id].message[i].text = md.render(messages[datas.thread.id].message[i].text);
                   }
-                }
               }
             });
           } else {
             console.log(msg_data.id, datas.user.id.toLowerCase());
             const users_id = [];
             const user_icons = [];
-            for (let i = 0; i < messages[datas.thread.id]["message"].length; i++) {
-              const user_id = messages[datas.thread.id]["message"][i]["id"];
+            for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
+              const user_id = messages[datas.thread.id].message[i].id;
 
               if (users_id.indexOf(user_id) === -1) {
                 users_id[users_id.length] = user_id;
@@ -2237,8 +2599,8 @@ io.on("connection", (socket) => {
         } else {
           const users_id = [];
           const user_icons = [];
-          for (let i = 0; i < messages[datas.thread.id]["message"].length; i++) {
-            const user_id = messages[datas.thread.id]["message"][i]["id"];
+          for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
+            const user_id = messages[datas.thread.id].message[i].id;
 
             if (users_id.indexOf(user_id) === -1) {
               users_id[users_id.length] = user_id;
@@ -2258,8 +2620,8 @@ io.on("connection", (socket) => {
       } else {
         const users_id = [];
         const user_icons = [];
-        for (let i = 0; i < messages[val]["message"].length; i++) {
-          const user_id = messages[val]["message"][i]["id"];
+        for (let i = 0; i < messages[val].message.length; i++) {
+          const user_id = messages[val].message[i].id;
 
           if (users_id.indexOf(user_id) === -1) {
             users_id[users_id.length] = user_id;
@@ -2279,8 +2641,8 @@ io.on("connection", (socket) => {
     } else {
       const users_id = [];
       const user_icons = [];
-      for (let i = 0; i < messages[datas.thread.id]["message"].length; i++) {
-        const user_id = messages[datas.thread.id]["message"][i]["id"];
+      for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
+        const user_id = messages[datas.thread.id].message[i].id;
 
         if (users_id.indexOf(user_id) === -1) {
           users_id[users_id.length] = user_id;

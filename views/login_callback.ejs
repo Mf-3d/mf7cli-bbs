@@ -34,11 +34,14 @@
         <a href="/">Home</a>
         <h2>login</h2>
         <ul>
+          <%= query.appName %>がアカウントへのアクセスを要求しています。
           <%= status %>
-          <form method="post" action="/login" id="login_form">
+          <form method="post" action="/login_callback" id="login_form">
             <input type="text" min="5" placeholder="IDを入力してください。" id="submit_id" name="submit_id"/>
             <br/>
             <input type="password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
+            <br/>
+            データが送信されるURL <input type="text" id="callback" name="callback" readonly value="<%= query.callback %>"/>
             <br/>
             <input type="button" onclick="submit()" value="送信"/>
           </form>
@@ -54,7 +57,7 @@
       <% if(redirect_uri){ %>
         <script>
           setTimeout(function(){
-            window.location.href = '<%= redirect_uri %>';
+            window.location.href = '<%- redirect_uri %>';
           }, 2*1000);
         </script>
       <% } %>

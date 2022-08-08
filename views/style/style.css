@@ -107,13 +107,12 @@ h1 {
 
 ::selection {
     background: #1495ff;
-    color: #000000;
+    color: #fff;
 }
 
-//Firefox
 ::-moz-selection {
     background: #1495ff;
-    color: #000000;
+    color: #fff;
 }
 
 .dark ::selection {
@@ -536,4 +535,32 @@ li h2 {
 li img {
   border-radius: 5px;
   width: 200px;
+}
+
+#rss_list > li {
+  background: #dbebf8;
+  font-size: 0.8em;
+  height: 1em;
+  overflow: hidden;
+  position: relative;
+  border-radius:  15px 0px 0px 15px;
+  transition: 0.0s;
+}
+#rss_list > li:after {
+  background: linear-gradient(to right, rgba(100, 180, 225, 0) 0%, #dbebf8 50%, #dbebf8 100%);
+  bottom: 0;
+  content: "";
+  height: 100%;
+  position: absolute;
+  right: 0;
+  width: 40px;
+  transition: 0.0s;
+}
+
+.dark #rss_list > li {
+  background: #333333;
+}
+
+.dark #rss_list > li:after {
+  background: linear-gradient(to right, rgba(100, 180, 225, 0) 0%, #333333 50%, #333333 100%);
 }
