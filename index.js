@@ -292,7 +292,9 @@ app.use((req, res, next) => {
   if(require('./server_config.json').maintenance === false) {
     next();
   } else {
-    res.render('./maintenance.ejs', {});
+    res.render('./maintenance.ejs', {
+      serverConfig
+    });
   }
 });
 
@@ -325,20 +327,24 @@ app.get("/login", (req, res) => {
       query: {
         appName: req.query.appName,
         callback: req.query.callback
-      }
+      },
+      serverConfig
     });
     
     return;
   }
   res.render("./login.ejs", {
     status: "",
-    redirect_uri: null
+    redirect_uri: null,
+    serverConfig
   });
 });
 
 // スレッドにもこれがあったほうがいい
 app.get("/users/", (req, res) => {
-  res.render("./users_page_home.ejs", {});
+  res.render("./users_page_home.ejs", {
+    serverConfig
+  });
 });
 
 // ユーザーページ
@@ -347,7 +353,8 @@ app.get("/users/:user_id", (req, res) => {
     if (val !== null) {
       // res.send(val.id + 'さんのページです。');
       res.render("./users_page.ejs", {
-        account: val
+        account: val,
+        serverConfig
       });
     } else {
       res.send(req.params.user_id + "さんは存在しません。");
@@ -588,7 +595,8 @@ app.post("/settings/change_password", (req, res) => {
           res.render("./settings.ejs", {
             status: "パスワードの変更に成功しました",
             account: val,
-            api_key: val.api.mf7cli.api_key
+            api_key: val.api.mf7cli.api_key,
+            serverConfig
           });
         } else {
           res.cookie("id", val.id, { httpOnly: false });
@@ -597,7 +605,8 @@ app.post("/settings/change_password", (req, res) => {
           res.render("./settings.ejs", {
             status: "パスワードの変更に成功しました",
             account: val,
-            api_key: ""
+            api_key: "",
+            serverConfig
           });
         }
       } else if (req.cookies.password !== val.password && req.body.submit_password === val.password) {
@@ -605,13 +614,15 @@ app.post("/settings/change_password", (req, res) => {
           res.render("./settings.ejs", {
             status: "パスワードが一致しません",
             account: val,
-            api_key: val.api.mf7cli.api_key
+            api_key: val.api.mf7cli.api_key,
+            serverConfig
           });
         } else {
           res.render("./settings.ejs", {
             status: "パスワードが一致しません",
             account: val,
-            api_key: ""
+            api_key: "",
+            serverConfig
           });
         }
       } else if (req.body.submit_new_password === val.password) {
@@ -619,20 +630,23 @@ app.post("/settings/change_password", (req, res) => {
           res.render("./settings.ejs", {
             status: "新しいパスワードは現在のパスワードではないものを指定してください",
             account: val,
-            api_key: val.api.mf7cli.api_key
+            api_key: val.api.mf7cli.api_key,
+            serverConfig
           });
         } else {
           res.render("./settings.ejs", {
             status: "新しいパスワードは現在のパスワードではないものを指定してください",
             account: val,
-            api_key: ""
+            api_key: "",
+            serverConfig
           });
         }
       } else {
         res.render("./settings.ejs", {
           status: "予期しないエラーが発生しました",
           account: val,
-          api_key: ""
+          api_key: "",
+          serverConfig
         });
 
         console.log(req.body);
@@ -821,7 +835,8 @@ app.get("/auth/:token", async (req, res) => {
     console.log(checkToken().length, "誰かがメールアドレス認証に失敗したよ。トークンが存在しないよ。");
     res.render("./register.ejs", {
       status:
-        "Tokenが新規登録用の物だったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。"
+        "Tokenが新規登録用の物だったため仮登録画面にリダイレクトされました。もしかしたら保存期間が過ぎたのかもしれません。",
+      serverConfig
     });
   }
 });
@@ -900,7 +915,8 @@ app.post("/auth/exist/:token/auth", (req, res) => {
           });
           res.render("./login.ejs", {
             status: "メールアドレスの登録が完了しました。",
-            redirect_uri: "/"
+            redirect_uri: "/",
+            serverConfig
           });
         } else {
           let { badge } = checkToken()[checkToken().length - 1];
@@ -994,7 +1010,8 @@ app.post("/auth/:token/auth", (req, res) => {
 
       res.render("./auth.ejs", {
         status: checkToken()[checkToken().length - 1].id + "は存在します。",
-        account: checkToken()[checkToken().length - 1]
+        account: checkToken()[checkToken().length - 1],
+        serverConfig
       });
     } else {
       console.log(
@@ -1193,20 +1210,23 @@ app.post("/login", (req, res) => {
         });
         res.render("./login.ejs", {
           status: "ログインに成功しました。",
-          redirect_uri: "/"
+          redirect_uri: "/",
+          serverConfig
         });
       } else {
         console.log(req.body.submit_id[0] + 'がログインに失敗しました。パスワードがDBのパスワードと一致しません。"');
         res.render("./login.ejs", {
           status: "ログインに失敗しました。パスワードがDBのパスワードと一致しません。",
-          redirect_uri: null
+          redirect_uri: null,
+          serverConfig
         });
       }
     } else {
       console.log(req.body.submit_id[0] + "は存在しません");
       res.render("./login.ejs", {
         status: "ユーザーが存在しません。",
-        redirect_uri: null
+        redirect_uri: null,
+        serverConfig
       });
     }
   });
@@ -1235,14 +1255,16 @@ app.post("/login_callback", (req, res) => {
         console.log(req.body.submit_id[0] + 'がログインに失敗しました。パスワードがDBのパスワードと一致しません。"');
         res.render("./login.ejs", {
           status: "ログインに失敗しました。パスワードがDBのパスワードと一致しません。",
-          redirect_uri: '/'
+          redirect_uri: '/',
+          serverConfig
         });
       }
     } else {
       console.log(req.body.submit_id[0] + "は存在しません");
       res.render("./login.ejs", {
         status: "ユーザーが存在しません。",
-        redirect_uri: '/'
+        redirect_uri: '/',
+        serverConfig
       });
     }
   });
@@ -1327,7 +1349,8 @@ app.post("/register", (req, res) => {
             console.log(req.body.submit_id[0] + "が登録しようとしています");
             res.render("./login.ejs", {
               status: "確認用メールを送信しました。",
-              redirect_uri: "/"
+              redirect_uri: "/",
+              serverConfig
             });
           } else {
             console.log(
@@ -1337,7 +1360,8 @@ app.post("/register", (req, res) => {
             res.render("./login.ejs", {
               // status: "登録に成功しました。\nログインしてください。"
               status: "現在メール認証の最大件数を超えています。10分ほど経ってから再度送信してください。",
-              redirect_uri: "/"
+              redirect_uri: "/",
+              serverConfig
             });
           }
         } else {
@@ -1376,7 +1400,8 @@ app.post("/register", (req, res) => {
             res.render("./login.ejs", {
               // status: "登録に成功しました。\nログインしてください。"
               status: "確認用メールを送信しました。",
-              redirect_uri: "/"
+              redirect_uri: "/",
+              serverConfig
             });
           });
 
@@ -1402,7 +1427,8 @@ app.post("/register", (req, res) => {
           console.log(req.body.submit_id[0] + "が登録しようとしています");
           res.render("./login.ejs", {
             status: "確認用メールを送信しました。",
-            redirect_uri: "/"
+            redirect_uri: "/",
+            serverConfig
           });
           // db.set(user_id, {
           //   id: req.body["submit_id"][0],
@@ -1414,28 +1440,33 @@ app.post("/register", (req, res) => {
       } else if (val !== null) {
         console.log(req.body.submit_id[0] + "は存在します");
         res.render("./register.ejs", {
-          status: req.body.submit_id[0] + "は存在します。別の名前を指定してください。"
+          status: req.body.submit_id[0] + "は存在します。別の名前を指定してください。",
+          serverConfig
         });
       } else if (req.body.submit_id[0].length < 5 || req.body.submit_id[1].length < 8 || req.body.submit_id[0].length > 15) {
         console.log(req.body.submit_id[0] + "さん、要件を満たしていません。");
         res.render("./register.ejs", {
-          status: "パスワードかIDが要件を満たしていません。"
+          status: "パスワードかIDが要件を満たしていません。",
+          serverConfig
         });
       } else if (!req.body.submit_id[2] || !email_pattern.test(req.body.submit_id[2])) {
         console.log(req.body.submit_id[0] + "さん、要件を満たしていません。");
         res.render("./register.ejs", {
-          status: "正しいメールアドレスを入力してください。"
+          status: "正しいメールアドレスを入力してください。",
+          serverConfig
         });
       } else if ((await userlist_match(userlist, "email", req.body.submit_id[2])) !== 0) {
         console.log(req.body.submit_id[0] + "さんの入力したメールアドレスは既に使用されています。");
         console.log("リスト: ", userlist, "\n結果: ", await userlist_match(userlist, "email", req.body.submit_id[2]));
         res.render("./register.ejs", {
-          status: "入力したメールアドレスは既に使用されています。"
+          status: "入力したメールアドレスは既に使用されています。",
+          serverConfig
         });
       } else if ((await userlist_match(userlist, "id", req.body.submit_id[0])) !== 0) {
         console.log(req.body.submit_id[0] + "さんの入力したIDは既に使用されています。");
         res.render("./register.ejs", {
-          status: "入力したIDは既に使用されています。"
+          status: "入力したIDは既に使用されています。",
+          serverConfig
         });
       }
     });
@@ -1619,7 +1650,8 @@ threads.threads.forEach((val) => {
         cookies: req.cookies,
         users_data: {
           icon: user_icons.slice( -load_length )
-        }
+        },
+        serverConfig
       });
     } else {
       messages[val] = { message: [] };
@@ -1641,7 +1673,8 @@ threads.threads.forEach((val) => {
         cookies: req.cookies,
         users_data: {
           icon: user_icons.slice( -load_length )
-        }
+        },
+        serverConfig
       });
     }
   });
@@ -2236,18 +2269,21 @@ app.get("/settings/profile", (req, res) => {
       if (req.cookies.password !== val.password) {
         res.render("./login.ejs", {
           status: "設定を見るにはログインをしてください",
-          redirect_uri: null
+          redirect_uri: null,
+          serverConfig
         });
       } else {
         res.render("./settings_profile.ejs", {
           status: "",
-          account: val
+          account: val,
+          serverConfig
         });
       }
     } else {
       res.render("./login.ejs", {
         status: "設定を見るにはログインをしてください",
-        redirect_uri: null
+        redirect_uri: null,
+        serverConfig
       });
     }
   });
@@ -2261,7 +2297,8 @@ app.post("/settings/profile/set_bio", async (req, res) => {
   if (req.cookies.password !== val.password) {
     res.render("./login.ejs", {
       status: "設定を見るにはログインをしてください",
-      redirect_uri: null
+      redirect_uri: null,
+      serverConfig
     });
     return;
   }
@@ -2278,7 +2315,8 @@ app.post("/settings/profile/set_bio", async (req, res) => {
   });
   res.render("./settings_profile.ejs", {
     status: "",
-    account: val
+    account: val,
+    serverConfig
   });
 });
 
@@ -2340,7 +2378,8 @@ app.post("/settings/profile/set_link", (req, res) => {
       if (req.cookies.password !== val.password) {
         res.render("./login.ejs", {
           status: "設定を見るにはログインをしてください",
-          redirect_uri: null
+          redirect_uri: null,
+          serverConfig
         });
       } else {
         console.log(req.body.submit_text);
@@ -2357,7 +2396,8 @@ app.post("/settings/profile/set_link", (req, res) => {
         }).then(() => {
           res.render("./settings_profile.ejs", {
             status: "",
-            account: val
+            account: val,
+            serverConfig
           });
         });
       }
@@ -2415,7 +2455,8 @@ app.post("/upload/icon", upload.single("img_file"), (req, res) => {
 app.use((req, res) => {
   res.status(404);
   res.render("./404.ejs", {
-    status: req.path + "は存在しません。"
+    status: req.path + "は存在しません。",
+    serverConfig
   });
 });
 
