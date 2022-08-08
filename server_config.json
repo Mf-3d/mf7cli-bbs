@@ -1,0 +1,7 @@
+{
+  "server_name": "",
+  "server_domain": "bbs.mf7cli.potp.me",
+  "server_port": 3000,
+  "admin_user": "mf7cli",
+  "maintenance": false
+}

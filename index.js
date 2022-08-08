@@ -1,5 +1,7 @@
 "use strict";
 
+const serverConfig = require('./server_config.json');
+
 const express = require("express");
 const multer = require("multer");
 const maxSize = 1 * 1000 * 1000;
@@ -45,7 +47,7 @@ const check_image_validity = (file_path) => sharp(file_path).toBuffer();
 // メール送信のあれ
 const auth = {
   type: "OAuth2",
-  user: process.env.mail_address, // エイリアスのアドレス
+  user: process.env.mail_address, // アドレス
   clientId: process.env.client_id, // Client ID
   clientSecret: process.env.client_secret, // Client Secret
   refreshToken: process.env.refresh_token // Reflesh Token
@@ -281,6 +283,18 @@ app.use((req, res, next) => {
 //     console.log(req.socket.remoteAddress);
 //   }
 // });
+
+app.use((req, res, next) => {
+  if(req.originalUrl.slice(0, 6) === '/style' || req.originalUrl.slice(0, 6) === '/image') {
+    next();
+    return;
+  }
+  if(require('./server_config.json').maintenance === false) {
+    next();
+  } else {
+    res.render('./maintenance.ejs', {});
+  }
+});
 
 app.get("/", async (req, res) => {
   const user_id = `users${req.cookies.id}`;
@@ -1441,22 +1455,25 @@ threads.threads.forEach((val) => {
     }
     if(typeof load_length !== 'number' || !req.query.length){
       load_length = 10;
+      if(messages[val].message.length - 1 < 10) {
+        load_length = messages[val].message.length - 1;
+      }
     }
 
     if(start_length > messages[val].message.length - 1){
       start_length = messages[val].message.length - 1;
     }
 
-    if(load_length > messages[val].message.length){
-      load_length = messages[val].message.length;
-    }
-
-    if(start_length < load_length){
-      start_length = load_length;
+    if(load_length > messages[val].message.length - 1){
+      load_length = messages[val].message.length - 1;
     }
     
     for (let i = start_length; i < start_length + load_length; i++) {
-      messages[val].message[i].text = md.render(String(messages[val].message[i].text));
+      try {
+        messages[val].message[i].text = md.render(String(messages[val].message[i].text));
+      } catch (e) {
+        messages[val].message[i].text = '(このメッセージはStringではない型のメッセージです。)';
+      }
     }
     
     res.json(messages[val].message.splice(-start_length, load_length));
@@ -1540,7 +1557,7 @@ threads.threads.forEach((val) => {
         load_length = messages[val].message.length;
       }
       
-      for (let i = 0; i < load_length; i++) {
+      for (let i = 0; i < messages[val].message.length; i++) {
         messages[val].message[i].text = md.render(String(messages[val].message[i].text));
         const user_id = messages[val].message[i].id;
 
@@ -1567,7 +1584,7 @@ threads.threads.forEach((val) => {
         account,
         cookies: req.cookies,
         users_data: {
-          icon: user_icons
+          icon: user_icons.slice( -load_length )
         }
       });
     } else {
@@ -1589,7 +1606,7 @@ threads.threads.forEach((val) => {
         account,
         cookies: req.cookies,
         users_data: {
-          icon: user_icons
+          icon: user_icons.slice( -load_length )
         }
       });
     }
@@ -2384,6 +2401,10 @@ io.on("connection", (socket) => {
     console.log("現在観覧中のデバイス数:", online_device);
   });
 
+  socket.on('getServerConfig', () => {
+    socket.emit('serverConfig', serverConfig);
+  });
+
   socket.on("init", async (datas) => {
     const db_datas = await db.get("messages" + datas.thread.id);
     for (let index = 0; index < db_datas.message.length; index++) {
@@ -2676,6 +2697,6 @@ function escape_html(string) {
   });
 }
 
-server.listen(3000, () => {
+server.listen(serverConfig.server_port, () => {
   console.log("サーバーを起動しました");
 });
