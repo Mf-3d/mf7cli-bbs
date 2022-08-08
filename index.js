@@ -308,6 +308,7 @@ app.get("/", async (req, res) => {
   res.render("./index.ejs", {
     threads: thread_,
     account: val,
+    serverConfig
   });
 });
 
@@ -460,18 +461,21 @@ app.get("/logout", (req, res) => {
     res.clearCookie("id");
     res.clearCookie("password");
     res.render("./logout.ejs", {
-      status: "ログアウトに成功しました"
+      status: "ログアウトに成功しました",
+      serverConfig
     });
   } else {
     res.render("./logout.ejs", {
-      status: "ログインしてください"
+      status: "ログインしてください",
+      serverConfig
     });
   }
 });
 
 app.get("/register", (req, res) => {
   res.render("./register.ejs", {
-    status: ""
+    status: "",
+    serverConfig
   });
 });
 
@@ -482,14 +486,16 @@ app.get("/settings", async (req, res) => {
   if (val === null) {
     res.render("./login.ejs", {
       status: "設定を見るにはログインをしてください",
-      redirect_uri: null
+      redirect_uri: null,
+      serverConfig
     });
     return;
   }
   if (req.cookies.password !== val.password) {
     res.render("./login.ejs", {
       status: "設定を見るにはログインをしてください",
-      redirect_uri: null
+      redirect_uri: null,
+      serverConfig
     });
     return;
   }
