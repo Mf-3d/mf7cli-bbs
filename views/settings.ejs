@@ -60,15 +60,6 @@
           <br/>
           <input type="submit" value="送信">
         </form>
-        <h3>APIキー</h3>
-        <ul>
-          <% if(api_key !== ""){ %>
-            <li><%= api_key %></li>
-            <a href="/settings/get_api_key">再生成</a>
-          <% } else{ %>
-            <a href="/settings/get_api_key">生成</a>
-          <% } %>
-        </ul>
         <h3>メールアドレス変更</h3>
         <% if(account.email !== undefined){ %>
           <%= account.email %>で登録されています。
