@@ -23,6 +23,7 @@ const cookieparser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const RssParser = require('rss-parser');
+const request = require('request');
 const rssParser = new RssParser();
 // トークン用
 const uuidjs = require("uuidjs");
@@ -75,13 +76,15 @@ const db = new DBClient();
 // 使われてる
 let userlist;
 
-// let special_token = {
-//   max_use: 1,
-//   use: 0,
-//   token: uuidjs.generate()
-// }
-
-// db.set("emailauthque", []);
+const rqt = (url) => {
+  return new Promise((resolve, reject)=> {
+    request(url, {
+      method: 'GET'
+    }, (error, response, body)=> {
+      resolve(body);
+    });
+  });
+}
 
 // キューを削除するあれ
 setInterval(async () => {
@@ -254,7 +257,7 @@ app.use((req, res, next) => {
    * 例えば127.0.0.1などIPアドレス直打ちの場合は400を返して終了する.
    * 下のapp.get()は処理されない
    */
-  if (hostname.match("potp.me") !== null || hostname.match("potp.me") !== undefined) {
+  if (hostname.match("mf7cli.potp.me") !== null || hostname.match("mf7cli.potp.me") !== undefined) {
     next();
     return;
   }
@@ -360,6 +363,29 @@ app.get("/users/:user_id", (req, res) => {
       res.send(req.params.user_id + "さんは存在しません。");
     }
   });
+});
+app.get("/users/:user_id/:hostname", async (req, res) => {
+  if(req.params.hostname === serverConfig.server_name) {
+    res.redirect(`https://${req.params.hostname}/users/${req.params.user_id}`)
+  }
+  let val;
+  try {
+    val = JSON.parse(await rqt(`https://${req.params.hostname}/api/v1/users/${req.params.user_id}`));
+  } catch (e) {
+    res.send(req.params.user_id + "さんは存在しません。");
+    return;
+  }
+  
+  if (val !== null) {
+    val.id = `${req.params.hostname}/${val.user_id}`;
+    // res.send(val.id + 'さんのページです。');
+    res.render("./users_page.ejs", {
+      account: val,
+      serverConfig
+    });
+  } else {
+    res.send(req.params.user_id + "さんは存在しません。");
+  }
 });
 
 // アイコン😟
