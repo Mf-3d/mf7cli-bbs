@@ -27,6 +27,9 @@ const request = require('request');
 const rssParser = new RssParser();
 // トークン用
 const uuidjs = require("uuidjs");
+
+const userManager = require('./lib/userManager');
+
 // メッセージを自動更新するためのやつ
 const io = require("socket.io")(server);
 
@@ -311,18 +314,18 @@ app.get("/users/", (req, res) => {
 });
 
 // ユーザーページ
-app.get("/users/:user_id/", (req, res) => {
-  db.get("users" + req.params.user_id.toLowerCase()).then((val) => {
-    if (val !== null) {
-      // res.send(val.id + 'さんのページです。');
-      res.render("./users_page.ejs", {
-        account: val,
-        serverConfig
-      });
-    } else {
-      res.send(req.params.user_id + "さんは存在しません。");
-    }
-  });
+app.get("/users/:user_id/", async (req, res) => {
+  let val = await userManager.getUser(req.params.user_id);
+
+  if (val !== null) {
+    // res.send(val.id + 'さんのページです。');
+    res.render("./users_page.ejs", {
+      account: val,
+      serverConfig
+    });
+  } else {
+    res.send(req.params.user_id + "さんは存在しません。");
+  }
 });
 
 app.get("/users/:user_id/:hostname", async (req, res) => {
@@ -352,22 +355,22 @@ app.get("/users/:user_id/:hostname", async (req, res) => {
 
 // アイコン😟
 // imgでリダイレクト😟
-app.get("/users/:user_id/icon", (req, res) => {
-  db.get("users" + req.params.user_id.toLowerCase()).then((val) => {
-    if (val !== null) {
-      if (!val.icon) {
-        res.redirect("/image/default_icon");
-        return;
-      }
-      if (val.icon.indexOf("http") !== -1) {
-        res.redirect(val.icon);
-      } else {
-        res.sendFile(__dirname + "/views" + val.icon);
-      }
-    } else {
+app.get("/users/:user_id/icon", async (req, res) => {
+  let val = await userManager.getUser(req.params.user_id);
+  
+  if (val !== null) {
+    if (!val.icon) {
       res.redirect("/image/default_icon");
+      return;
     }
-  });
+    if (val.icon.indexOf("http") !== -1) {
+      res.redirect(val.icon);
+    } else {
+      res.sendFile(__dirname + "/views" + val.icon);
+    }
+  } else {
+    res.redirect("/image/default_icon");
+  }
 });
 
 
