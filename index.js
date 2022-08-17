@@ -367,6 +367,7 @@ app.get("/users/:user_id", (req, res) => {
 app.get("/users/:user_id/:hostname", async (req, res) => {
   if(req.params.hostname === serverConfig.server_name) {
     res.redirect(`https://${req.params.hostname}/users/${req.params.user_id}`)
+    return;
   }
   let val;
   try {
@@ -391,9 +392,10 @@ app.get("/users/:user_id/:hostname", async (req, res) => {
 // アイコン😟
 // imgでリダイレクト😟
 app.get("/users/:user_id/icon", async (req, res) => {
+  console.log(req.params.user_id.toLowerCase())
   const val = await db.get("users" + req.params.user_id.toLowerCase());
-  if (val === null) {
-    res.send(req.params.user_id + "さんは存在しません。");
+  if (!val) {
+    res.redirect("/image/default_icon");
     return;
   }
   if (!val.icon) {
@@ -426,68 +428,6 @@ app.get('/api/v1/users/:user_id', async (req, res) => {
     badge: val.badge
   });
 });
-app.post("/api/v1/users/get_user/:user_id", async (req, res) => {
-  if (!req.body.keys) {
-    res.status(400);
-    res.json({
-      message: "必要なデータがありません。",
-      req_data: req.body
-    });
-    return;
-  }
-  if (typeof req.body.keys !== "object") {
-    res.status(400);
-    res.json({
-      message: "キーの形がObjectではありません。",
-      req_data: req.body
-    });
-    return;
-  }
-  if (!req.body.keys[0]) {
-    res.status(400);
-    res.json({
-      message: "クライアントユーザーのIDがありません。",
-      req_data: req.body
-    });
-    return;
-  }
-  if (!req.body.keys[1]) {
-    res.status(400);
-    res.json({
-      message: "クライアントユーザーのパスワードがありません。",
-      req_data: req.body
-    });
-    return;
-  }
-  const client_val = await db.get("users" + req.body.keys[0].toLowerCase());
-  if (client_val === null) {
-    res.status(400);
-    res.json({
-      message: "クライアントユーザーが存在しません。",
-      req_data: req.body
-    });
-    return;
-  }
-  if (!bcrypt.compareSync(req.body.keys[1], client_val.password)) {
-    res.status(400);
-    res.send("クライアントユーザーのパスワードが一致しません。");
-    return;
-  }
-  const val = await db.get("users" + req.params.user_id.toLowerCase());
-  if (val === null) {
-    res.status(404);
-    res.send(req.params.user_id + "さんは存在しません。");
-    return;
-  }
-  res.json({
-    user_id: val.id,
-    bio: val.bio,
-    link: val.link,
-    icon: val.icon,
-    badge: val.badge
-  });
-});
-// 😟
 
 app.get("/logout", (req, res) => {
   if (req.cookies.id !== null && req.cookies.password !== null) {
