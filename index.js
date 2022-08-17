@@ -1489,45 +1489,18 @@ threads.threads.forEach((val) => {
 
     const messages_db = await db.get(db_id);
     if (messages_db !== null && messages_db !== undefined) {
-      messages[val] = await db.get(db_id);
-      messages[val].message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
-      db.set(db_id, messages_db);
-      const users_id = [];
-      const user_icons = [];
-      let load_length = 5;
-
-      if (load_length > messages[val].message.length - 1) {
-        load_length = messages[val].message.length;
-      }
-
-      for (let i = 0; i < messages[val].message.length; i++) {
-        messages[val].message[i].text = md.render(String(messages[val].message[i].text));
-        const user_id = messages[val].message[i].id;
-
-        if (users_id.indexOf(user_id) === -1) {
-          users_id[users_id.length] = user_id;
-          const user = await db.get("users" + user_id);
-          if (user.icon === undefined) user.icon = "/image/default_icon";
-          user_icons[user_icons.length] = user.icon;
-        } else {
-          users_id[users_id.length] = user_id;
-          let icon = user_icons[users_id.indexOf(user_id)];
-          if (icon === undefined) icon = "/image/default_icon";
-          user_icons[user_icons.length] = icon;
-        }
-      }
 
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
-        message: messages[val].message.slice(-load_length),
-        msg_length: messages[val].message.length,
+        message: [],
+        msg_length: 0,
         status: "",
         md,
         db,
         account,
         cookies: req.cookies,
         users_data: {
-          icon: user_icons.slice(-load_length)
+          icon: []
         },
         serverConfig
       });
@@ -1542,15 +1515,15 @@ threads.threads.forEach((val) => {
 
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
-        message: messages[val].message.slice(-load_length),
-        msg_length: messages[val].message.length,
+        message: [],
+        msg_length: 0,
         status: "",
         md,
         db,
         account,
         cookies: req.cookies,
         users_data: {
-          icon: user_icons.slice(-load_length)
+          icon: []
         },
         serverConfig
       });
@@ -1660,56 +1633,6 @@ app.post("/settings/profile/set_bio", async (req, res) => {
     serverConfig
   });
 });
-
-// app.post("/settings/profile/set_icon", (req, res) => {
-//   let user_id = `users${req.cookies.id}`;
-
-//   db.get(user_id).then((val) => {
-//     if(val !== null){
-//       console.debug(bcrypt.compareSync(req.cookies.password, val.password));
-//       if(!bcrypt.compareSync(req.cookies.password, val.password)){
-//         res.render("./login.ejs", {
-//           status: "設定を見るにはログインをしてください",
-//           redirect_uri: null
-//         });
-//       }
-//       else{
-//         const checkIfImageExists = (url) => {
-//           return new Promise((resolve, reject) => {
-//             const img = new Image();
-//             img.src = url;
-//             img.onload = () => resolve(url);
-//             img.onerror = () => reject(url);
-//           });
-//         };
-//         checkIfImageExists(req.body.submit_text)
-//         .then((url) => {
-//           console.log(`Image found: ${url}`);
-//         })
-//         .catch((url) => {
-//           console.log(`Image not found: ${url}`);
-//           req.body.submit_text = "/image/default_icon";
-//         });
-//         console.log(req.body.submit_text);
-//         if(req.body.submit_text.slice(-1) === /,|\n/) req.body.submit_text.slice(0, -1);
-//         db.set(`users${val.id}`,{
-//           id: val.id,
-//           password: val.password,
-//           email: val.email,
-//           bio: val.bio,
-//           link: val.link,
-//           badge: val.badge,
-//           icon: req.body.submit_text
-//         }).then(() => {
-//           res.render("./settings_profile.ejs", {
-//             status: "",
-//             account: val
-//           });
-//         });
-//       }
-//     }
-//   });
-// });
 
 app.post("/settings/profile/set_link", (req, res) => {
   const user_id = `users${req.cookies.id}`;
