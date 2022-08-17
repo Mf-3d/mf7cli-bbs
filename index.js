@@ -357,7 +357,7 @@ app.get("/remote/users/:user_id/:hostname", async (req, res) => {
 // imgでリダイレクト😟
 app.get("/users/:user_id/icon", async (req, res) => {
   let val = await userManager.getUser(req.params.user_id);
-  
+  if(val.error) console.error(val.error);
   if (val !== null) {
     if (!val.icon) {
       res.redirect("/image/default_icon");
