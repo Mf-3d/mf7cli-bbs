@@ -168,36 +168,6 @@ async function userlist_match(list, key, findkey) {
   }
 }
 
-// (async () => {
-//   console.log("🤔")
-//   userlist_match(await get_userlist(), "email").then((val) => {
-//     console.log("🤔: ", val);
-//     val.forEach((value) => {
-//       db.get(`users${value}`).then((val) => {
-//         if(val !== null){
-//           if(!val.badge) val.badge = [];
-//           // val.badge[val.badge.length] = "メールアドレス登録者";
-//           // val.badge.splice(val.badge.length, 1);
-//           db.set(`users${value}`, val);
-//         }
-//       });
-//     });
-//   });
-// })();
-
-// db.get("userswaryu_YND").then((val) => {
-//   val.id = 'waryu_ynd';
-//   db.set("userswaryu_ynd", val);
-//   db.delete("userswaryu_YND");
-//   console.log(val);
-// });
-
-// db.get("usersSorakime").then((val) => {
-//   val.id = 'sorakime';
-//   db.set("userssorakime", val);
-//   db.delete("usersSorakime");
-//   console.log(val);
-// });
 
 function isAlphabet(str) {
   str = str ?? "";
@@ -213,16 +183,6 @@ const messages = {};
 // これは最大メッセージ
 // いずれ削除
 const max_msg = 1000;
-
-// db.get("message/chat1").then(keys => {
-//   messages = keys;
-//   console.log(messages);
-//   messages.message[0] = {
-//     id: 'system', text: 'コードを結構書き換えました。', pinned: true
-//   }
-
-//   db.set("message/chat1", messages).then(() => {});
-// });
 
 // EJSを使用😟
 app.set("view engine", "ejs");
