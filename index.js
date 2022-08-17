@@ -328,7 +328,7 @@ app.get("/users/:user_id/", async (req, res) => {
   }
 });
 
-app.get("/users/:user_id/:hostname", async (req, res) => {
+app.get("/remote/users/:user_id/:hostname", async (req, res) => {
   if (req.params.hostname === serverConfig.server_name) {
     res.redirect(`https://${req.params.hostname}/users/${req.params.user_id}`)
     return;
