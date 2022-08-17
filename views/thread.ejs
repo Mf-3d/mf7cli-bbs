@@ -175,6 +175,7 @@
             if(data.thread.id === '<%= thread.name %>'){
               const messages = document.getElementById("messages");
               messages.innerHTML = ``;
+              document.getElementById('messageLength').innerHTML = data.message.length;
               for (let i = 0; i < data.message.length; i++) {
                 const li = document.createElement("li");
                 const date = new Date(data.message[i].date);
