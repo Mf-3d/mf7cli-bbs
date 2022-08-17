@@ -77,10 +77,10 @@ const db = new DBClient();
 let userlist;
 
 const rqt = (url) => {
-  return new Promise((resolve, reject)=> {
+  return new Promise((resolve, reject) => {
     request(url, {
       method: 'GET'
-    }, (error, response, body)=> {
+    }, (error, response, body) => {
       resolve(body);
     });
   });
@@ -115,12 +115,12 @@ function get_userlist() {
 
   setInterval(() => {
     rssParser.parseURL('https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf')
-    .then((feed) => {
-      io.emit("update-rss", feed.items.splice(0, 10));
-    })
-    .catch((error) => {
-      console.error('RSS 取得失敗', error);
-    });
+      .then((feed) => {
+        io.emit("update-rss", feed.items.splice(0, 10));
+      })
+      .catch((error) => {
+        console.error('RSS 取得失敗', error);
+      });
   }, 60000);
 })();
 
@@ -288,11 +288,11 @@ app.use((req, res, next) => {
 // });
 
 app.use((req, res, next) => {
-  if(req.originalUrl.slice(0, 6) === '/style' || req.originalUrl.slice(0, 6) === '/image') {
+  if (req.originalUrl.slice(0, 6) === '/style' || req.originalUrl.slice(0, 6) === '/image') {
     next();
     return;
   }
-  if(require('./server_config.json').maintenance === false) {
+  if (require('./server_config.json').maintenance === false) {
     next();
   } else {
     res.render('./maintenance.ejs', {
@@ -319,8 +319,8 @@ app.get("/", async (req, res) => {
 
 // Socket.IOにしない(多分)
 app.get("/login", (req, res) => {
-  if(req.query.callback) {
-    if(!req.query.appName) {
+  if (req.query.callback) {
+    if (!req.query.appName) {
       res.send('URLのパラメータが足りていません。');
       return;
     }
@@ -333,7 +333,7 @@ app.get("/login", (req, res) => {
       },
       serverConfig
     });
-    
+
     return;
   }
   res.render("./login.ejs", {
@@ -351,7 +351,7 @@ app.get("/users/", (req, res) => {
 });
 
 // ユーザーページ
-app.get("/users/:user_id", (req, res) => {
+app.get("/users/:user_id/", (req, res) => {
   db.get("users" + req.params.user_id.toLowerCase()).then((val) => {
     if (val !== null) {
       // res.send(val.id + 'さんのページです。');
@@ -364,8 +364,9 @@ app.get("/users/:user_id", (req, res) => {
     }
   });
 });
+
 app.get("/users/:user_id/:hostname", async (req, res) => {
-  if(req.params.hostname === serverConfig.server_name) {
+  if (req.params.hostname === serverConfig.server_name) {
     res.redirect(`https://${req.params.hostname}/users/${req.params.user_id}`)
     return;
   }
@@ -376,7 +377,7 @@ app.get("/users/:user_id/:hostname", async (req, res) => {
     res.send(req.params.user_id + "さんは存在しません。");
     return;
   }
-  
+
   if (val !== null) {
     val.id = `${req.params.hostname}/${val.user_id}`;
     // res.send(val.id + 'さんのページです。');
@@ -391,22 +392,22 @@ app.get("/users/:user_id/:hostname", async (req, res) => {
 
 // アイコン😟
 // imgでリダイレクト😟
-app.get("/users/:user_id/icon", async (req, res) => {
-  console.log(req.params.user_id.toLowerCase())
-  const val = await db.get("users" + req.params.user_id.toLowerCase());
-  if (val === null) {
-    res.redirect("/image/default_icon");
-    return;
-  }
-  if (!val.icon) {
-    res.redirect("/image/default_icon");
-    return;
-  }
-  if (val.icon.indexOf("http") !== -1) {
-    res.redirect(val.icon);
-  } else {
-    res.sendFile(__dirname + "/views" + val.icon);
-  }
+app.get("/users/:user_id/icon", (req, res) => {
+  db.get("users" + req.params.user_id.toLowerCase()).then((val) => {
+    if (val !== null) {
+      if (!val.icon) {
+        res.redirect("/image/default_icon");
+        return;
+      }
+      if (val.icon.indexOf("http") !== -1) {
+        res.redirect(val.icon);
+      } else {
+        res.sendFile(__dirname + "/views" + val.icon);
+      }
+    } else {
+      res.redirect("/image/default_icon");
+    }
+  });
 });
 
 
@@ -477,58 +478,6 @@ app.get("/settings", async (req, res) => {
     account: val,
     api_key: val.api ? val.api.mf7cli.api_key : "",
     serverConfig
-  });
-});
-
-app.get("/settings/get_api_key", (req, res) => {
-  const user_id = `users${req.cookies.id}`;
-  db.get(user_id).then((val) => {
-    if (val !== null) {
-      if (req.cookies.password === val.password) {
-        const api_key = Math.floor(Math.random() * (999 - 100) + 100);
-        const user = {
-          id: val.id,
-          password: val.password,
-          api: val.api,
-          email: val.email,
-          bio: val.bio,
-          link: val.link,
-          badge: val.badge,
-          icon: val.icon
-        };
-        if (user.api === null || user.api === undefined) user.api = { mf7cli: { api_key: "" } };
-        user.api.mf7cli.api_key = api_key;
-
-        db.set(user_id, user).then(() => {
-          console.log(val.id + "さんがAPIキーを生成しました。");
-        });
-
-        res.render("./settings.ejs", {
-          status: "APIキーを生成しました",
-          account: val,
-          api_key,
-          serverConfig
-        });
-      } else if (val.api) {
-          res.render("./login.ejs", {
-            status: "ログインしてください",
-            redirect_uri: null,
-            serverConfig
-          });
-        } else {
-          res.render("./login.ejs", {
-            status: "ログインしてください",
-            redirect_uri: null,
-            serverConfig
-          });
-        }
-    } else {
-      res.render("./login.ejs", {
-        status: "ログインしてください",
-        redirect_uri: null,
-        serverConfig
-      });
-    }
   });
 });
 
@@ -1002,20 +951,20 @@ app.post('/api/v1/getHash', (req, res) => {
           status: 0,
           message: 'Password matched.',
           hash: val.password
-        });    
+        });
       }
       else {
         res.json({
           status: -1,
           message: 'Passwords do not match.'
-        }); 
+        });
       }
     }
     else {
       res.json({
         status: -2,
         message: 'User does not exist.'
-      }); 
+      });
     }
   });
 });
@@ -1029,20 +978,20 @@ app.post('/api/v1/compare', (req, res) => {
         res.json({
           status: 0,
           message: 'Password matched.'
-        });    
+        });
       }
       else {
         res.json({
           status: -1,
           message: 'Passwords do not match.'
-        }); 
+        });
       }
     }
     else {
       res.json({
         status: -2,
         message: 'User does not exist.'
-      }); 
+      });
     }
   });
 });
@@ -1050,8 +999,8 @@ app.post('/api/v1/compare', (req, res) => {
 app.post('/api/v1/user/data/get', (req, res) => {
   const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
   db.get(user_id).then((val) => {
-    if(val !== null && req.body.submit_id[0].length >= 5) {
-      if(req.body.submit_id[1] === val.password) {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (req.body.submit_id[1] === val.password) {
         console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータにuser_dataを追加しました");
 
         const Conf = require('conf');
@@ -1067,13 +1016,13 @@ app.post('/api/v1/user/data/get', (req, res) => {
         res.json({
           status: -1,
           message: 'Passwords do not match.'
-        }); 
+        });
       }
     } else {
       res.json({
         status: -2,
         message: 'User does not exist.'
-      }); 
+      });
     }
   });
 });
@@ -1081,20 +1030,20 @@ app.post('/api/v1/user/data/get', (req, res) => {
 app.post('/api/v1/user/data/add', (req, res) => {
   const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
   db.get(user_id).then((val) => {
-    if(val !== null && req.body.submit_id[0].length >= 5) {
-      if(req.body.submit_id[1] === val.password) {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (req.body.submit_id[1] === val.password) {
         console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータにuser_dataを追加しました");
         let path = req.body.data.name.split('.');
 
         const Conf = require('conf');
 
         const config = new Conf();
-        
+
         config.set(req.body.data.name, req.body.data.data);
 
-        if(!val.user_data) val.user_data = {};
+        if (!val.user_data) val.user_data = {};
         val.user_data[path[0]] = config.get(path[0]);
-        
+
         res.json({
           status: 0,
           message: 'Password matched.',
@@ -1107,14 +1056,14 @@ app.post('/api/v1/user/data/add', (req, res) => {
         res.json({
           status: -1,
           message: 'Passwords do not match.'
-        }); 
+        });
       }
     }
     else {
       res.json({
         status: -2,
         message: 'User does not exist.'
-      }); 
+      });
     }
   });
 });
@@ -1122,20 +1071,20 @@ app.post('/api/v1/user/data/add', (req, res) => {
 app.post('/api/v1/user/data/delete', (req, res) => {
   const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
   db.get(user_id).then((val) => {
-    if(val !== null && req.body.submit_id[0].length >= 5) {
-      if(req.body.submit_id[1] === val.password) {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (req.body.submit_id[1] === val.password) {
         console.log(req.body.submit_id[0] + "がAPIで自身のユーザーデータにuser_dataを追加しました");
         let path = req.body.data.name.split('.');
 
         const Conf = require('conf');
 
         const config = new Conf();
-        
+
         config.delete(req.body.data.name);
-        
-        if(!val.user_data) val.user_data = {};
+
+        if (!val.user_data) val.user_data = {};
         val.user_data[path[0]] = config.get(path[0]);
-        
+
         res.json({
           status: 0,
           message: 'Password matched.',
@@ -1148,14 +1097,14 @@ app.post('/api/v1/user/data/delete', (req, res) => {
         res.json({
           status: -1,
           message: 'Passwords do not match.'
-        }); 
+        });
       }
     }
     else {
       res.json({
         status: -2,
         message: 'User does not exist.'
-      }); 
+      });
     }
   });
 });
@@ -1321,7 +1270,7 @@ app.post("/register", (req, res) => {
           } else {
             console.log(
               req.body.submit_id[0] +
-                "が登録しようとしています。現在メール認証の最大件数を超えているためメールを送信できませんでした。"
+              "が登録しようとしています。現在メール認証の最大件数を超えているためメールを送信できませんでした。"
             );
             res.render("./login.ejs", {
               // status: "登録に成功しました。\nログインしてください。"
@@ -1473,32 +1422,32 @@ threads.threads.forEach((val) => {
       messages_db = { message: [] };
       messages_db.message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
     }
-    
+
     messages[val] = messages_db;
     db.set(db_id, messages[val]);
 
     console.log(Number(req.query.start));
     let start_length = Number(req.query.start);
     let load_length = Number(req.query.length);
-    
-    if(typeof start_length !== 'number' || !req.query.start){
+
+    if (typeof start_length !== 'number' || !req.query.start) {
       start_length = 0;
     }
-    if(typeof load_length !== 'number' || !req.query.length){
+    if (typeof load_length !== 'number' || !req.query.length) {
       load_length = 10;
-      if(messages[val].message.length - 1 < 10) {
+      if (messages[val].message.length - 1 < 10) {
         load_length = messages[val].message.length - 1;
       }
     }
 
-    if(start_length > messages[val].message.length - 1){
+    if (start_length > messages[val].message.length - 1) {
       start_length = messages[val].message.length - 1;
     }
 
-    if(load_length > messages[val].message.length - 1){
+    if (load_length > messages[val].message.length - 1) {
       load_length = messages[val].message.length - 1;
     }
-    
+
     for (let i = start_length; i < start_length + load_length; i++) {
       try {
         messages[val].message[i].text = md.render(String(messages[val].message[i].text));
@@ -1506,7 +1455,7 @@ threads.threads.forEach((val) => {
         messages[val].message[i].text = '(このメッセージはStringではない型のメッセージです。)';
       }
     }
-    
+
     res.json(messages[val].message.splice(-start_length, load_length));
   });
 
@@ -1517,37 +1466,37 @@ threads.threads.forEach((val) => {
       messages_db = { message: [] };
       messages_db.message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
     }
-    
+
     messages[val] = messages_db;
     db.set(db_id, messages[val]);
 
     console.log(Number(req.query.start));
     let start_length = Number(req.query.start);
     let load_length = Number(req.query.length);
-    
-    if(typeof start_length !== 'number' || !req.query.start){
+
+    if (typeof start_length !== 'number' || !req.query.start) {
       start_length = 0;
     }
-    if(typeof load_length !== 'number' || !req.query.length){
+    if (typeof load_length !== 'number' || !req.query.length) {
       load_length = 10;
     }
 
-    if(start_length > messages[val].message.length - 1){
+    if (start_length > messages[val].message.length - 1) {
       start_length = messages[val].message.length - 1;
     }
 
-    if(load_length > messages[val].message.length){
+    if (load_length > messages[val].message.length) {
       load_length = messages[val].message.length;
     }
 
-    if(start_length < load_length){
+    if (start_length < load_length) {
       start_length = load_length;
     }
-    
+
     for (let i = start_length; i < start_length + load_length; i++) {
       messages[val].message[i].text = md.render(String(messages[val].message[i].text));
     }
-    
+
 
     res.json(messages[val].message.splice(-start_length, load_length));
   });
@@ -1584,10 +1533,10 @@ threads.threads.forEach((val) => {
       const user_icons = [];
       let load_length = 5;
 
-      if(load_length > messages[val].message.length - 1){
+      if (load_length > messages[val].message.length - 1) {
         load_length = messages[val].message.length;
       }
-      
+
       for (let i = 0; i < messages[val].message.length; i++) {
         messages[val].message[i].text = md.render(String(messages[val].message[i].text));
         const user_id = messages[val].message[i].id;
@@ -1607,15 +1556,15 @@ threads.threads.forEach((val) => {
 
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
-        message: messages[val].message.slice( -load_length ),
-        msg_length:  messages[val].message.length,
+        message: messages[val].message.slice(-load_length),
+        msg_length: messages[val].message.length,
         status: "",
         md,
         db,
         account,
         cookies: req.cookies,
         users_data: {
-          icon: user_icons.slice( -load_length )
+          icon: user_icons.slice(-load_length)
         },
         serverConfig
       });
@@ -1630,15 +1579,15 @@ threads.threads.forEach((val) => {
 
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
-        message: messages[val].message.slice( -load_length ),
-        msg_length:  messages[val].message.length,
+        message: messages[val].message.slice(-load_length),
+        msg_length: messages[val].message.length,
         status: "",
         md,
         db,
         account,
         cookies: req.cookies,
         users_data: {
-          icon: user_icons.slice( -load_length )
+          icon: user_icons.slice(-load_length)
         },
         serverConfig
       });
@@ -1912,11 +1861,11 @@ io.on("connection", (socket) => {
   socket.on("init", async (datas) => {
     const db_datas = await db.get("messages" + datas.thread.id);
     for (let index = 0; index < db_datas.message.length; index++) {
-      if(typeof db_datas.message[index].text === 'string'){
+      if (typeof db_datas.message[index].text === 'string') {
         // db_datas.message[index].text = escape_html(db_datas.message[index].text);
         db_datas.message[index].text = md.render(db_datas.message[index].text);
       }
-    }   
+    }
     socket.emit("update_all_messages", {
       message: db_datas.message,
       thread: {
@@ -1925,12 +1874,12 @@ io.on("connection", (socket) => {
     });
 
     rssParser.parseURL('https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf')
-    .then((feed) => {
-      socket.emit("update-rss", feed.items.splice(0, 10));
-    })
-    .catch((error) => {
-      console.error('RSS 取得失敗', error);
-    });
+      .then((feed) => {
+        socket.emit("update-rss", feed.items.splice(0, 10));
+      })
+      .catch((error) => {
+        console.error('RSS 取得失敗', error);
+      });
   });
 
   socket.on("woke-up", async (datas) => {
@@ -1948,8 +1897,8 @@ io.on("connection", (socket) => {
           }
         });
       } else if (typeof db_datas.message[i].text === "string") {
-          db_datas.message[i].text = md.render(db_datas.message[i].text);
-        }
+        db_datas.message[i].text = md.render(db_datas.message[i].text);
+      }
     }
   });
 
@@ -1985,7 +1934,7 @@ io.on("connection", (socket) => {
       return;
     }
     socket.emit("update_status", { text: "入力したパスワードが一致しました。" });
-    if (/^[\s\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+$/.test(datas.msg.text) || !datas.msg.text　|| datas.msg.text === "") {
+    if (/^[\s\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+$/.test(datas.msg.text) || !datas.msg.text || datas.msg.text === "") {
       socket.emit("update_status", { text: "メッセージが入力されていません。" });
       return;
     }
@@ -2035,14 +1984,14 @@ io.on("connection", (socket) => {
       // db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
       socket.emit("update_status", { text: "メッセージの上限に達していたため古いメッセージを削除しました。" });
     }
-    
+
     for (let index = 0; index < db_datas.message.length; index++) {
-      if(typeof db_datas.message[index].text === 'string'){
+      if (typeof db_datas.message[index].text === 'string') {
         // db_datas.message[index].text = escape_html(db_datas.message[index].text);
         db_datas.message[index].text = md.render(db_datas.message[index].text);
       }
-    }   
-    
+    }
+
     io.emit("update_all_messages", {
       message: db_datas.message,
       thread: {
@@ -2080,7 +2029,7 @@ io.on("connection", (socket) => {
 
         if (msg_data !== null) {
           if (msg_data.id === datas.user.id.toLowerCase()) {
-            if(datas.user.password !== account.password) return;
+            if (datas.user.password !== account.password) return;
             console.log(msg_data.id, "が", msg_data.text, "を削除しようとしています。");
             messages[datas.thread.id].message.splice(0 - (datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1)), 1);
 
@@ -2095,8 +2044,8 @@ io.on("connection", (socket) => {
                     }
                   });
                 } else if (typeof messages[datas.thread.id].message[i].text === "string") {
-                    messages[datas.thread.id].message[i].text = md.render(messages[datas.thread.id].message[i].text);
-                  }
+                  messages[datas.thread.id].message[i].text = md.render(messages[datas.thread.id].message[i].text);
+                }
               }
             });
           } else {
