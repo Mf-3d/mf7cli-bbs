@@ -172,6 +172,9 @@
           });
 
           socket.on("update_all_messages", (data) => {
+            const spinner = document.getElementsByClassName('loader-wrap')[0];
+            spinner.classList.add('loaded');
+            
             if(data.thread.id === '<%= thread.name %>'){
               const messages = document.getElementById("messages");
               messages.innerHTML = ``;
@@ -507,6 +510,9 @@
     <header>
       <%- include('header.ejs') %>
     </header>
+    <div class="loader-wrap">
+      <div class="loader"></div>
+    </div>
     <div id="columnsBox">
       <h1><%- serverConfig.server_name %> (<%= include('version.ejs') %>)</h1>
       <main>
