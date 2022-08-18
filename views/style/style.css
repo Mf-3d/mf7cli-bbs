@@ -582,6 +582,7 @@ li img {
 }
 
 .loader-wrap.loaded {
+  transition: all 1s;
   opacity: 0;
   visibility: hidden;
 }
