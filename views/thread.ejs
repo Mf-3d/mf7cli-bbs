@@ -1,4 +1,5 @@
 <% 
+  let i = message.length - 1
   if(typeof serverConfig === 'undefined') {
     serverConfig = {
       "server_name": "???",
@@ -40,8 +41,9 @@
         db,
         account,
         cookies,
-        users_data
-        }) 
+        users_data,
+        i
+        })
       %>
       <link rel="icon" type="image/png" href="/image/logo_circle" id="fav"/>
     </head>
@@ -77,7 +79,7 @@
               // 指定ミリ秒間だけループさせる（CPUは常にビジー状態）
               while (new Date() - startMsec < waitMsec);
             }
-            for (var i = message.length - 1; i >= 0; i--) {
+            for (i = message.length - 1; i >= 0; i--) {
               let message_text =  message[i].text;
             %>
             <div class="anker" id="<%= i %>"></div>
