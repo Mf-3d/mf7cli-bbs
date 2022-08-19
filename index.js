@@ -196,6 +196,7 @@ app.use(bodyParser.json());
 app.use(cookieparser());
 // あれだよ
 app.use("/image", express.static(__dirname + "/views/image"));
+app.use("/scripts", express.static(__dirname + "/views/scripts"));
 app.use("/image/badges", express.static(__dirname + "/views/image/badges"));
 
 // bbs.mf7cli.tkに飛ばすやつ
