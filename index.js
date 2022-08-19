@@ -1511,9 +1511,6 @@ threads.threads.forEach((val) => {
 
       console.log(messages);
 
-      // let users_id = [];
-      const user_icons = [];
-
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
         message: [],
