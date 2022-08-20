@@ -64,11 +64,6 @@
       location.href = "https://www.google.com";
     }
 
-    let audio = null;
-    document.body.addEventListener('click', () => {
-      audio = new Audio('https://soundeffect-lab.info/sound/button/mp3/cursor1.mp3');
-    });  
-
     window.addEventListener('focus', () => {
       socket.emit("woke-up", {
         thread: {id: "<%= thread.name %>"}
