@@ -316,7 +316,10 @@ app.get("/users/:user_id/", async (req, res) => {
       serverConfig
     });
   } else {
-    res.send(req.params.user_id + "さんは存在しません。");
+    res.render("./404.ejs", {
+      status: req.params.user_id + "さんは存在しません。",
+      serverConfig
+    });
   }
 });
 
@@ -329,7 +332,10 @@ app.get("/remote/users/:user_id/:hostname", async (req, res) => {
   try {
     val = JSON.parse(await rqt(`https://${req.params.hostname}/api/v1/users/${req.params.user_id}`));
   } catch (e) {
-    res.send(req.params.user_id + "さんは存在しません。");
+    res.render("./404.ejs", {
+      status: req.params.user_id + "さんは存在しません。",
+      serverConfig
+    });
     return;
   }
 
@@ -341,7 +347,10 @@ app.get("/remote/users/:user_id/:hostname", async (req, res) => {
       serverConfig
     });
   } else {
-    res.send(req.params.user_id + "さんは存在しません。");
+    res.render("./404.ejs", {
+      status: req.params.user_id + "さんは存在しません。",
+      serverConfig
+    });
   }
 });
 
