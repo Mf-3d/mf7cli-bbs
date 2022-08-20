@@ -23,8 +23,9 @@ const cookieparser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const RssParser = require('rss-parser');
-const request = require('request');
 const rssParser = new RssParser();
+const rqt = require('./lib/promiseRqt');
+
 // トークン用
 const uuidjs = require("uuidjs");
 
@@ -78,16 +79,6 @@ const db = new DBClient();
 // なにこれ
 // 使われてる
 let userlist;
-
-const rqt = (url) => {
-  return new Promise((resolve, reject) => {
-    request(url, {
-      method: 'GET'
-    }, (error, response, body) => {
-      resolve(body);
-    });
-  });
-}
 
 // キューを削除するあれ
 setInterval(async () => {
