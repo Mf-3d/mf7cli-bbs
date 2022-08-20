@@ -309,7 +309,7 @@ app.get("/users/", (req, res) => {
 app.get("/users/:user_id/", async (req, res) => {
   let val = await userManager.getUser(req.params.user_id);
 
-  if (val !== null) {
+  if (!val.error) {
     // res.send(val.id + 'さんのページです。');
     res.render("./users_page.ejs", {
       account: val,
