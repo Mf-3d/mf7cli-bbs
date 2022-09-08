@@ -1352,15 +1352,26 @@ app.post("/register", (req, res) => {
   });
 });
 
-app.get("/api/v1/thread", (req, res) => {
+app.get("/api/v1/thread/", (req, res) => {
   res.json({
     threads: threads.threads
   });
 });
 
-app.post("/api/v1/thread", (req, res) => {
+app.post("/api/v1/thread/", (req, res) => {
   res.json({
     threads: threads.threads
+  });
+});
+
+app.get('/api/v1/thread_list', (req, res) => {
+  const thread_ = threads.threads.map((val) => ({
+    name: val,
+    id: val,
+  }));
+
+  res.json({
+    threads: thread_
   });
 });
 
@@ -1379,7 +1390,7 @@ threads.threads.forEach((val) => {
   //   });
   // });
 
-  app.get(`/api/v1/thread/${val}`, async (req, res) => {
+  app.all(`/api/v1/thread/${val}`, async (req, res) => {
     const db_id = `messages${val}`;
     let messages_db = await db.get(db_id);
     if (messages_db === null || messages_db === undefined) {
@@ -1389,15 +1400,27 @@ threads.threads.forEach((val) => {
 
     messages[val] = messages_db;
     db.set(db_id, messages[val]);
+    
+    let start_length = req.query.start;
+    let load_length = req.query.length;
+    
 
-    console.log(Number(req.query.start));
-    let start_length = Number(req.query.start);
-    let load_length = Number(req.query.length);
+    if (load_length === 'max') {
+      load_length = messages[val].message.length;
+    }
 
-    if (typeof start_length !== 'number' || !req.query.start) {
+    if (typeof start_length !== 'number' && req.query.start) {
+      start_length = Number(start_length);
+    }
+    if (typeof load_length !== 'number' && req.query.start) {
+      load_length = Number(load_length);
+    }
+    
+    if (typeof start_length !== 'number' && !req.query.start) {
       start_length = 0;
     }
-    if (typeof load_length !== 'number' || !req.query.length) {
+    
+    if (typeof load_length !== 'number' && !req.query.length) {
       load_length = 10;
       if (messages[val].message.length - 1 < 10) {
         load_length = messages[val].message.length - 1;
@@ -1408,8 +1431,8 @@ threads.threads.forEach((val) => {
       start_length = messages[val].message.length - 1;
     }
 
-    if (load_length > messages[val].message.length - 1) {
-      load_length = messages[val].message.length - 1;
+    if (load_length > messages[val].message.length) {
+      load_length = messages[val].message.length;
     }
 
     for (let i = start_length; i < start_length + load_length; i++) {
@@ -1423,47 +1446,6 @@ threads.threads.forEach((val) => {
     res.json(messages[val].message.splice(-start_length, load_length));
   });
 
-  app.post(`/api/v1/thread/${val}`, async (req, res) => {
-    const db_id = `messages${val}`;
-    let messages_db = await db.get(db_id);
-    if (messages_db === null || messages_db === undefined) {
-      messages_db = { message: [] };
-      messages_db.message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
-    }
-
-    messages[val] = messages_db;
-    db.set(db_id, messages[val]);
-
-    console.log(Number(req.query.start));
-    let start_length = Number(req.query.start);
-    let load_length = Number(req.query.length);
-
-    if (typeof start_length !== 'number' || !req.query.start) {
-      start_length = 0;
-    }
-    if (typeof load_length !== 'number' || !req.query.length) {
-      load_length = 10;
-    }
-
-    if (start_length > messages[val].message.length - 1) {
-      start_length = messages[val].message.length - 1;
-    }
-
-    if (load_length > messages[val].message.length) {
-      load_length = messages[val].message.length;
-    }
-
-    if (start_length < load_length) {
-      start_length = load_length;
-    }
-
-    for (let i = start_length; i < start_length + load_length; i++) {
-      messages[val].message[i].text = md.render(String(messages[val].message[i].text));
-    }
-
-
-    res.json(messages[val].message.splice(-start_length, load_length));
-  });
 
   app.get(`/thread/${val}`, async (req, res) => {
     // 初期化
@@ -1527,10 +1509,77 @@ threads.threads.forEach((val) => {
       });
     }
   });
+
+  app.get(`/thread/2/${val}`, async (req, res) => {
+    // 初期化
+    const db_id = `messages${val}`;
+
+    // Source by https://qiita.com/saekis/items/c2b41cd8940923863791
+    // function escape_html (string) {
+    //   if(typeof string !== 'string') {
+    //     return string;
+    //   }
+    //   return string.replace(/[&'`"<>]/g, function(match) {
+    //     return {
+    //       '&': '&amp;',
+    //       "'": '&#x27;',
+    //       '`': '&#x60;',
+    //       '"': '&quot;',
+    //       '<': '&lt;',
+    //       '>': '&gt;',
+    //     }[match]
+    //   });
+    // }
+
+    const account = await db.get(`users${req.cookies.id}`);
+
+    const messages_db = await db.get(db_id);
+    if (messages_db !== null && messages_db !== undefined) {
+
+      res.render("./thread_new_ui.ejs", {
+        thread: { name: val, id: val },
+        message: [],
+        msg_length: 0,
+        status: "",
+        md,
+        db,
+        account,
+        cookies: req.cookies,
+        users_data: {
+          icon: []
+        },
+        serverConfig
+      });
+    } else {
+      messages[val] = { message: [] };
+      messages[val].message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
+
+      console.log(messages);
+
+      res.render("./thread.ejs", {
+        thread: { name: val, id: val },
+        message: [],
+        msg_length: 0,
+        status: "",
+        md,
+        db,
+        account,
+        cookies: req.cookies,
+        users_data: {
+          icon: []
+        },
+        serverConfig
+      });
+    }
+  });
 });
 
 app.get("/style/style.css", (req, res) => {
   res.sendFile(__dirname + "/views/style/style.css");
+});
+
+app.get("/style/style_v2.css", (req, res) => {
+  res.sendFile(__dirname + "/views/style/style_v2.css");
 });
 
 app.get("/image/default_icon", (req, res) => {

@@ -106,13 +106,13 @@ h1 {
 }
 
 ::selection {
-    background: #1495ff;
-    color: #fff;
+  background: #1495ff;
+  color: #fff;
 }
 
 ::-moz-selection {
-    background: #1495ff;
-    color: #fff;
+  background: #1495ff;
+  color: #fff;
 }
 
 .dark ::selection {

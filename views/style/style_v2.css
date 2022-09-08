@@ -1,0 +1,62 @@
+aside {
+  width: 20%;
+  margin-top: 3em;
+  position: fixed;
+}
+
+#columnsBox {
+  width: 60%;
+  margin-top: 3em;
+  margin-left: 20%;
+}
+
+#statusColumn {
+  width: 20%;
+  margin-top: 3em;
+}
+
+.threadName {
+  color: #1495ff;
+}
+
+.dark .threadName {
+  color: #ff7b00;
+}
+
+.sideMenuItem {
+  color: #1495ff;
+}
+
+.dark .sideMenuItem {
+  color: #ff7b00;
+}
+
+#threadList {
+  line-height: 1.5em;
+}
+
+#threadList a {
+  cursor: pointer;
+}
+
+.loader-wrap2 {
+	position: fixed;
+	display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60%;
+  height: 100%;
+  background: #fafafa;
+  z-index: 10;
+  margin: -3em;
+}
+
+.dark .loader-wrap2 {
+  background: #252525;
+}
+
+.loader-wrap2.loaded {
+  transition: all 1s;
+  opacity: 0;
+  visibility: hidden;
+}

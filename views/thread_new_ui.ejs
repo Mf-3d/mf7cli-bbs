@@ -1,0 +1,147 @@
+<% 
+  let i = message.length - 1
+  if(typeof serverConfig === 'undefined') {
+    serverConfig = {
+      "server_name": "???",
+      "server_domain": "http://example.com",
+      "server_port": 3000,
+      "public_instance": false,
+      
+      "admin_user": "???",
+      
+      "maintenance": false
+    }
+  }
+%>
+<!doctype html>
+<html>
+    <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+      <meta property="og:url" content="http://<%- serverConfig.server_domain %>"/>
+      <meta property="og:type" content="article"/>
+      <meta property="og:title" content="<%= thread.name %> - <%- serverConfig.server_name %>"/>
+      <meta property="og:description" content="ここは<%- serverConfig.admin_user %>さんの掲示板です。"/>
+      <meta property="og:image" content="http://<%- serverConfig.server_domain %>/image/logo"/>
+      <meta property="og:site_name" content="<%- serverConfig.server_name %>" />
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <title><%= thread.name %> - <%- serverConfig.server_name %></title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+      <link rel="stylesheet" type="text/css" href="/style/style.css">
+      <link rel="stylesheet" type="text/css" href="/style/style_v2.css">
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> 
+      <%- include('scripts/thread.ejs', {
+        serverConfig, 
+        thread,
+        message,
+        msg_length,
+        status,
+        md,
+        db,
+        account,
+        cookies,
+        users_data,
+        i
+        })
+      %>
+      <%- include('scripts/thread_new_ui.ejs') %>
+      <link rel="icon" type="image/png" href="/image/logo_circle" id="fav"/>
+    </head>
+  <body class="preload">
+    <header>
+      <%- include('header.ejs') %>
+    </header>
+    <div class="loader-wrap">
+      <div class="loader"></div>
+    </div>
+    <aside>
+      <h2>threads</h2>
+      <div id="threadList"></div>
+    </aside>
+    <div id="columnsBox">
+      <main>
+        <div class="loader-wrap2 loaded">
+        <div class="loader"></div>
+      </div>
+        <a href="/">Home</a>
+        <br/>
+        <h2 class="threadName">#<%= thread.name %></h2>
+        <span id="status" style="transition: all 1.0s;">
+        <% if(status){ %>
+          <%= status %>
+        <% } %>
+        </span>
+        <br/>
+<!--         <form method="post" action="/thread/<%= thread.name %>"> -->
+          <textarea placeholder="テキストを入力してください。" class="submit_text" maxlength="150" id="submit_text0" name="submit_text"></textarea>
+          <br/>
+          <input type="button" onclick="submit()" id="submit_button" value="送信"/>
+<!--         </form> -->
+        <ul id="messages">
+          <%
+            function sleep(waitMsec) {
+              var startMsec = new Date();
+            
+              // 指定ミリ秒間だけループさせる（CPUは常にビジー状態）
+              while (new Date() - startMsec < waitMsec);
+            }
+            for (i = message.length - 1; i >= 0; i--) {
+              let message_text =  message[i].text;
+            %>
+            <div class="anker" id="<%= i %>"></div>
+            <li>
+              <div class="id">
+                <a href="/users/<%= message[i].id %>">@<%= message[i].id %></a>
+                <br/>
+                <img src="<%= users_data.icon[i] %>"/>
+              </div>
+              <div class="text"><%- message_text %></div>
+                <div class="msg_menu">
+                  <nav class="div-menu-nav">
+                    <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
+                    <div class="box1">
+                      <div>                        
+                        <a class="delete_button">🗑削除</a>
+                        <a href="javascript:copyToClipboard('https://bbs.mf7cli.tk/thread/<%= thread.id %>#<%= i %>')">🗒リンクをコピー</a>
+                      </div>
+                      <div style="font-size: 12px; margin: 0.5em;" class="date">
+                        <br/>
+                        メッセージ番号: <%= i %>                        
+                        <br/>
+                        <% if(message[i].date){
+                          let date = new Date(message[i].date);
+                          let min;
+                          date.setHours(date.getHours() + 9);
+                          if(String(date.getMinutes()).length === 1){
+                            min = "0" + date.getMinutes();
+                          }
+                          else{
+                            min =  date.getMinutes();
+                          }
+                        %>
+                          送信された日時: <%- date.getFullYear() %>/<%- date.getMonth() + 1 %>/<%- date.getDate() %> <%- date.getHours() %>:<%- min %>
+                        <% } else { %>
+                          日付が保存されていないメッセージです。
+                        <% } %>
+                    </div>    
+                  </div>
+                </div>
+              </nav>
+            </li>
+          <%
+            }
+          %>
+        </ul>
+      </main>
+      <footer>
+        <%- include('footer.ejs') %>
+      </footer>
+    </div>
+    <div id="statusColumn">
+      <%- include('status.ejs', {message_length: msg_length}) %>
+    </div>    
+  </body>
+</html>

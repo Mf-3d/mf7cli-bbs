@@ -1,0 +1,82 @@
+<script>
+  function threadTransition　(threadName) {
+    document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
+    document.getElementsByClassName('threadName')[0].innerText = `#${threadName}`;
+    document.getElementsByTagName('title')[0].innerText = `${threadName} - mf7cli-BBS`;
+    fetch(`https://bbs.mf7cli.potp.me/api/v1/thread/${threadName}?length=max`)
+    .then(response => response.json())
+    .then(thread => {
+      const messages = document.getElementById("messages");
+      messages.innerHTML = ``;
+      document.getElementById('messageLength').innerHTML = thread.length;
+      
+      thread.forEach((message, i) => {
+        const li = document.createElement("li");
+        const date = new Date(message.date);
+        let min;
+        // date.setHours(date.getHours() + 9);
+        if(String(date.getMinutes()).length === 1){
+          min = "0" + date.getMinutes();
+        }
+        else{
+          min =  date.getMinutes();
+        }
+        li.innerHTML = `
+        <div class="id">
+          <a href="/users/${message.id}">@${message.id}</a>
+          <br/>
+          <img src="/users/${message.id}/icon"/>
+        </div>
+        <div class="text"></div>
+          <div class="msg_menu">
+            <nav class="div-menu-nav">
+              <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
+              <div class="box1">
+                <div>
+                  <a class="delete_button">🗑削除</a>
+                  <a href="javascript:copyToClipboard('https://bbs.mf7cli.tk/thread/<%= thread.id %>#${i}')">🗒リンクをコピー</a>
+                </div>                      
+                <div style="font-size: 12px; margin: 0.5em;" class="date">
+                  <br/>
+                  送信された日時: ${date.getFullYear()} %>/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${min}
+                </div>   
+              </div>
+            </nav>
+          </div>
+        </div>`;
+        li.querySelector('.text').insertAdjacentHTML('afterbegin', message.text);
+        messages.prepend(li);
+        twemoji.parse(document.body);
+      });
+
+      document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
+    });
+    history.pushState(null, null, `/thread/2/${threadName}`);
+  }
+  
+  window.addEventListener('load', () => {
+    fetch('https://bbs.mf7cli.potp.me/api/v1/thread_list/')
+    .then(response => response.json())
+    .then(list => {
+      list.threads.forEach((thread) => {
+        let threadElement = document.createElement('a');
+        threadElement.href = `/threads/${thread.id}`;
+        threadElement.innerHTML = thread.name;
+        // document.getElementById('threadList').insertAdjacentHTML('afterbegin', threadElement);
+        document.getElementById('threadList').innerHTML += `
+        <a onclick="threadTransition('${thread.id}')">${thread.name}</a>
+        <br/>
+        `;
+      });
+    });
+  });
+
+  window.addEventListener('popstate', (event) => {
+    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') {
+      threadTransition(document.location.href.slice(36));
+      return;
+    }
+    if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
+    }
+  });
+</script>
