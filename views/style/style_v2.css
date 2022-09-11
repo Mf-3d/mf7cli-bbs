@@ -1,7 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&family=Roboto&display=swap');
+
+@media only screen and (max-width:768px) {
+  aside {
+    width: 10%!important;
+  } 
+
+  .loader-wrap2 {
+    width: 90%!important;
+  }
+}
+
+body {
+  font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+}
+
 aside {
   width: 20%;
   margin-top: 3em;
   position: fixed;
+  overflow: hidden;
 }
 
 #columnsBox {
@@ -36,6 +53,10 @@ aside {
 }
 
 #threadList a {
+  cursor: pointer;
+}
+
+.delete_button {
   cursor: pointer;
 }
 

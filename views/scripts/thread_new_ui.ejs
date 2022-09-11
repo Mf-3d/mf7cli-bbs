@@ -1,16 +1,18 @@
 <script>
-  function threadTransition　(threadName) {
+  function threadTransition　(threadName, changeUrl = true) {
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
     document.getElementsByClassName('threadName')[0].innerText = `#${threadName}`;
     document.getElementsByTagName('title')[0].innerText = `${threadName} - mf7cli-BBS`;
     fetch(`https://bbs.mf7cli.potp.me/api/v1/thread/${threadName}?length=max`)
     .then(response => response.json())
-    .then(thread => {
+    .then(async thread => {
+      let opened_index = undefined;
+      
       const messages = document.getElementById("messages");
       messages.innerHTML = ``;
       document.getElementById('messageLength').innerHTML = thread.length;
       
-      thread.forEach((message, i) => {
+      await thread.forEach((message, i) => {
         const li = document.createElement("li");
         const date = new Date(message.date);
         let min;
@@ -49,9 +51,53 @@
         twemoji.parse(document.body);
       });
 
+      lists = Array.from(document.querySelectorAll(".menu-click"));  
+      lists2 = Array.from(document.querySelectorAll(".box1 .delete_button"));
+      lists.forEach((elm) => {
+        elm.addEventListener("click", () => {
+          if(opened_index === undefined || opened_index !== [].slice.call(lists).indexOf(elm)){
+            let lists2 = document.querySelectorAll('.menu-hover1');
+            opened_index = [].slice.call(lists).indexOf(elm);
+            console.log(opened_index);
+            if(document.getElementsByClassName("clicked")[0] !== undefined && document.getElementsByClassName("clicked")[0] !== undefined){ 
+              document.getElementsByClassName("clicked")[0].classList.remove('clicked');
+              document.getElementsByClassName("clicked")[0].classList.remove('clicked');
+            }
+            elm.classList.toggle('clicked');
+            lists2[opened_index].classList.toggle('clicked');
+          }
+          else{
+            let lists2 = document.querySelectorAll('.menu-hover1');
+            console.log(opened_index);
+            lists[opened_index].classList.remove('clicked');
+            lists2[opened_index].classList.remove('clicked');
+            opened_index = undefined;
+          }
+        });
+      });
+  
+      lists2.forEach((elm) => {
+        elm.addEventListener("click", () => {
+          index = [].slice.call(lists2).indexOf(elm);
+          console.log(index);
+          socket.emit("delete-msg", {
+            thread: {
+              id: "<%= thread.name %>",
+              delete_msg_id: index
+            },
+            user: {
+              id: Cookies.get("id"),
+              password: Cookies.get("password")
+            },
+          });
+          // post('/thread/<%= thread.name %>/delete', {message_num: index})
+        });
+      });
+
       document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
     });
-    history.pushState(null, null, `/thread/2/${threadName}`);
+
+    if (changeUrl) history.pushState(null, null, `/thread/2/${threadName}`);
   }
   
   window.addEventListener('load', () => {
@@ -73,8 +119,7 @@
 
   window.addEventListener('popstate', (event) => {
     if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') {
-      threadTransition(document.location.href.slice(36));
-      return;
+      threadTransition(document.location.href.slice(36), false);
     }
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
     }

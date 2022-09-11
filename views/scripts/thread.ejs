@@ -25,10 +25,14 @@
   function submit() {
     // document.getElementById("login_form").submit();
     twemoji.parse(document.body);
+    let thread_name;
+
+    if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
     
     socket.emit("post-msg", {
       thread: {
-        id: "<%= thread.name %>"
+        id: thread_name
       },
       user: {
         id: Cookies.get("id"),
@@ -65,8 +69,13 @@
     }
 
     window.addEventListener('focus', () => {
+      let thread_name;
+
+      if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+    
       socket.emit("woke-up", {
-        thread: {id: "<%= thread.name %>"}
+        thread: {id: thread_name}
       });
       console.log("focusされました。");
     });
@@ -108,9 +117,14 @@
       browser = "unknown";
       console.warn("このサービスはこのブラウザをサポートしておりません。\nサポートを受けるには他のブラウザを使用して下さい。");
     }
+
+    let thread_name;
+
+    if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
     
     socket.emit("init", {
-      thread: {id: "<%= thread.name %>"}
+      thread: {id: thread_name}
     });
     
     // function reconnectSocket() {
@@ -143,8 +157,13 @@
     socket.on("update_all_messages", (data) => {
       const spinner = document.getElementsByClassName('loader-wrap')[0];
       spinner.classList.add('loaded');
-      
-      if(data.thread.id === '<%= thread.name %>'){
+
+      let thread_name;
+
+      if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+    
+      if(data.thread.id === thread_name){
         const messages = document.getElementById("messages");
         messages.innerHTML = ``;
         document.getElementById('messageLength').innerHTML = data.message.length;
@@ -213,13 +232,15 @@
         });
       });
 
+
       lists2.forEach((elm) => {
         elm.addEventListener("click", () => {
           index = [].slice.call(lists2).indexOf(elm);
           console.log(index);
+          
           socket.emit("delete-msg", {
             thread: {
-              id: "<%= thread.name %>",
+              id: thread_name,
               delete_msg_id: index
             },
             user: {
@@ -238,7 +259,12 @@
     let lists2 = Array.from(document.querySelectorAll(".box1 .delete_button"));
 
     socket.on("update_messages", (data)　=>　{
-      if(data.thread.id === '<%= thread.name %>') {
+      let thread_name;
+
+      if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+    
+      if(data.thread.id === thread_name) {
         const messages = document.getElementById("messages");
         const li = document.createElement("li");
         const date = new Date(data.message.date);
@@ -303,9 +329,10 @@
           elm.addEventListener("click", () => {
             index = [].slice.call(lists2).indexOf(elm);
             console.log(index);
+            
             socket.emit("delete-msg", {
               thread: {
-                id: "<%= thread.name %>",
+                id: thread_name,
                 delete_msg_id: index
               },
               user: {
@@ -358,7 +385,7 @@
     let crruent_messages;
     let latest_messages;
 
-    fetch('/api/v1/thread/<%= thread.name %>/')
+    fetch('/api/v1/thread/' + thread_name)
     .then(response => response.json())
     .then(data => {
       crruent_messages = data;
@@ -436,12 +463,17 @@
     });
 
     lists2.forEach((elm) => {
+      let thread_name;
+
+      if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+    
       elm.addEventListener("click", () => {
         index = [].slice.call(lists2).indexOf(elm);
         console.log(index);
         socket.emit("delete-msg", {
           thread: {
-            id: "<%= thread.name %>",
+            id: thread_name,
             delete_msg_id: index
           },
           user: {

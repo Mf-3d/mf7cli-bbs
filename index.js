@@ -1958,7 +1958,7 @@ io.on("connection", (socket) => {
     if (account !== null) {
       if (datas.thread.delete_msg_id !== undefined) {
         // 0 - (逆にしたい数 - 全体の数)
-        const msg_data = messages[datas.thread.id].message[0 - (datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1))];
+        const msg_data = messages[datas.thread.id].message[-(datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1))];
 
         if (msg_data !== null) {
           if (msg_data.id === datas.user.id.toLowerCase()) {
