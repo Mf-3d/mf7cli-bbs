@@ -32,11 +32,11 @@ aside {
   margin-top: 3em;
 }
 
-.threadName {
+.pageName {
   color: #1495ff;
 }
 
-.dark .threadName {
+.dark .pageName {
   color: #ff7b00;
 }
 
@@ -68,7 +68,7 @@ aside {
   width: 60%;
   height: 100%;
   background: #fafafa;
-  z-index: 10;
+  z-index: 9;
   margin: -3em;
 }
 

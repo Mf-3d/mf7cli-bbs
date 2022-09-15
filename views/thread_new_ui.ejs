@@ -73,18 +73,18 @@
       </div>
         <a href="/">Home</a>
         <br/>
-        <h2 class="threadName">#<%= thread.name %></h2>
+        <h2 class="pageName">#<%= thread.name %></h2>
         <span id="status" style="transition: all 1.0s;">
         <% if(status){ %>
           <%= status %>
         <% } %>
         </span>
         <br/>
-<!--         <form method="post" action="/thread/<%= thread.name %>"> -->
+        <div id="inputForm">
           <textarea placeholder="テキストを入力してください。" class="submit_text" maxlength="150" id="submit_text0" name="submit_text"></textarea>
           <br/>
           <input type="button" onclick="submit()" id="submit_button" value="送信"/>
-<!--         </form> -->
+        </div>
         <ul id="messages">
           <%
             function sleep(waitMsec) {
@@ -99,7 +99,7 @@
             <div class="anker" id="<%= i %>"></div>
             <li>
               <div class="id">
-                <a href="/users/<%= message[i].id %>">@<%= message[i].id %></a>
+                <a onclick="pageTransition('user', '<%= message[i].id %>')">@<%= message[i].id %></a>
                 <br/>
                 <img src="<%= users_data.icon[i] %>"/>
               </div>

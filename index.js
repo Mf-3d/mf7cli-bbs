@@ -323,6 +323,33 @@ app.get("/users/:user_id/", async (req, res) => {
   }
 });
 
+app.get("/users/2/:user_id/", async (req, res) => {
+  let val = await userManager.getUser(req.params.user_id);
+
+  if (!val.error) {
+    // res.send(val.id + 'さんのページです。');
+    res.render("./user_new_ui.ejs", {
+      account: val,
+      thread: { name: val, id: val },
+      message: [],
+      msg_length: 0,
+      status: "",
+      md,
+      db,
+      cookies: req.cookies,
+      users_data: {
+        icon: []
+      },
+      serverConfig
+    });
+  } else {
+    res.render("./404.ejs", {
+      status: req.params.user_id + "さんは存在しません。",
+      serverConfig
+    });
+  }
+});
+
 app.get("/remote/users/:user_id/:hostname/", async (req, res) => {
   if (req.params.hostname === serverConfig.server_name) {
     res.redirect(`https://${req.params.hostname}/users/${req.params.user_id}`)
@@ -375,7 +402,6 @@ app.get("/users/:user_id/icon/", async (req, res) => {
 });
 
 
-// あとでパスワードが一致がなんとかかんとか😟
 app.get('/api/v1/users/:user_id', async (req, res) => {
   const val = await db.get("users" + req.params.user_id.toLowerCase());
   if (val === null) {
@@ -568,7 +594,7 @@ app.post("/settings/change_email", async (req, res) => {
           mailOptions.html = `
           <html>
             <head>
-              <link rel="stylesheet" type="text/css" href="https://bbs.mf7cli.tk/style/style.css"/>
+              <link rel="stylesheet" type="text/css" href="https://bbs.mf7cli.potp.me/style/style.css"/>
               <title>【重要】アカウントのメールアドレス登録の確認</title>
             </head>
             <body>

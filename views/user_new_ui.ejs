@@ -1,0 +1,87 @@
+<%
+  if(typeof serverConfig === 'undefined') {
+    serverConfig = {
+      "server_name": "???",
+      "server_domain": "http://example.com",
+      "server_port": 3000,
+      "public_instance": false,
+      
+      "admin_user": "???",
+      
+      "maintenance": false
+    }
+  }
+%>
+<!doctype html>
+<html>
+    <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
+      <meta property="og:url" content="http://<%- serverConfig.server_domain %>"/>
+      <meta property="og:type" content="article"/>
+      <meta property="og:title" content="@<%= account.id %> - <%- serverConfig.server_name %>"/>
+      <meta property="og:description" content="ここは<%- serverConfig.admin_user %>さんの掲示板です。"/>
+      <meta property="og:image" content="http://<%- serverConfig.server_domain %>/image/logo"/>
+      <meta property="og:site_name" content="<%- serverConfig.server_name %>" />
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="ie=edge">
+      <title>@<%= account.id %> - <%- serverConfig.server_name %></title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+      <link rel="stylesheet" type="text/css" href="/style/style.css">
+      <link rel="stylesheet" type="text/css" href="/style/style_v2.css">
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> 
+      <link rel="icon" type="image/png" href="/image/logo_circle" id="fav"/>
+    </head>
+  <body class="preload">
+    <header>
+      <%- include('header.ejs') %>
+    </header>
+
+    <!-- 全画面ローディング -->
+<!--     <div class="loader-wrap">
+      <div class="loader"></div>
+    </div> -->
+    
+    <!-- メニューバー -->
+    <aside>
+      <h2>users</h2>
+      <div id="userList"></div>
+      <!-- 通知リストを追加予定 -->
+    </aside>
+    <div id="columnsBox">
+      <main>
+        <div class="loader-wrap2 loaded">
+        <div class="loader"></div>
+      </div>
+        <a href="/">Home</a>
+        <br/>
+        <h2 class="pageName">@<%= account.id %></h2>
+        <br/>
+        <% if(!account.icon) account.icon = "/image/default_icon" %>
+        <img style="width: 100px; height: 100px;" src="<%= account.icon %>"/>
+        <br/>
+        <ul>
+          <% if(account.bio){ %>
+            <% let bio = account.bio.replace('\n', '<br/>') %>
+            <li>
+              <% let bios = account.bio.split('\n');  %>
+              <% for (var i = 0; i < bios.length; i++) {%>
+                <%= bios[i] %>
+                <br/>
+              <% } %>
+            </li>
+          <% } else{ %>
+            <li>自己紹介がありません。</li>
+          <% } %>
+        </ul>
+      </main>
+      <footer>
+        <%- include('footer.ejs') %>
+      </footer>
+    </div>
+    <div id="statusColumn">
+    </div>    
+  </body>
+</html>

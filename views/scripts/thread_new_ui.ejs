@@ -1,8 +1,65 @@
 <script>
+  function pageTransition　(type, page, changeUrl = true) {
+    document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
+    
+    if (type === 'thread') {
+      if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
+      if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
+      document.getElementById('inputForm').innerHTML = `
+      <textarea placeholder="テキストを入力してください。" class="submit_text" maxlength="150" id="submit_text0" name="submit_text"></textarea>
+      <br/>
+      <input type="button" onclick="submit()" id="submit_button" value="送信"/>`;
+      
+      threadTransition(page, changeUrl);
+      return;
+    }
+
+    if (type === 'user') {
+      document.getElementById('inputForm').innerHTML = '';
+      userTransition(page, changeUrl);
+      return;
+    }
+  }
+
+  function userTransition (userName, changeUrl = true) {
+    if (changeUrl) history.pushState(null, null, `/users/2/${userName}`);
+    
+    document.getElementsByClassName('pageName')[0].innerText = `@${userName}`;
+    document.getElementsByTagName('title')[0].innerText = `@${userName} - mf7cli-BBS`;
+
+    fetch(`https://bbs.mf7cli.potp.me/api/v1/users/${userName}`)
+    .then(response => response.json())
+    .then(async user => {
+      const messages = document.getElementById("messages");
+      messages.innerHTML = '';
+      document.getElementById('messageLength').innerHTML = '';
+
+      const profileIcon = document.createElement('img');
+
+      profileIcon.src = `https://bbs.mf7cli.potp.me/users/${userName}/icon`;
+      profileIcon.style = "width: 100px; height: 100px;";
+      profileIcon.id = 'profileIcon'
+      
+      document.getElementsByTagName('main')[0].append(profileIcon);
+
+      const bio = document.createElement('ul');
+      user.bio = user.bio.replace(/\n/g, '<br/>');
+      
+      bio.innerHTML = `<li>
+        ${user.bio}
+      </li>`;
+      bio.id = 'profileBio';
+
+      document.getElementsByTagName('main')[0].append(bio);
+      
+      document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
+    });
+  }
+  
   function threadTransition　(threadName, changeUrl = true) {
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
-    document.getElementsByClassName('threadName')[0].innerText = `#${threadName}`;
-    document.getElementsByTagName('title')[0].innerText = `${threadName} - mf7cli-BBS`;
+    document.getElementsByClassName('pageName')[0].innerText = `#${threadName}`;
+    document.getElementsByTagName('title')[0].innerText = `#${threadName} - mf7cli-BBS`;
     fetch(`https://bbs.mf7cli.potp.me/api/v1/thread/${threadName}?length=max`)
     .then(response => response.json())
     .then(async thread => {
@@ -25,7 +82,7 @@
         }
         li.innerHTML = `
         <div class="id">
-          <a href="/users/${message.id}">@${message.id}</a>
+          <a onclick="pageTransition('user', '${message.id}')">@${message.id}</a>
           <br/>
           <img src="/users/${message.id}/icon"/>
         </div>
@@ -110,7 +167,7 @@
         threadElement.innerHTML = thread.name;
         // document.getElementById('threadList').insertAdjacentHTML('afterbegin', threadElement);
         document.getElementById('threadList').innerHTML += `
-        <a onclick="threadTransition('${thread.id}')">${thread.name}</a>
+        <a onclick="pageTransition('thread', '${thread.id}')">${thread.name}</a>
         <br/>
         `;
       });
@@ -119,7 +176,10 @@
 
   window.addEventListener('popstate', (event) => {
     if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') {
-      threadTransition(document.location.href.slice(36), false);
+      pageTransition('thread', document.location.href.slice(36), false);
+    }
+    if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
+      pageTransition('user', document.location.href.slice(35), false);
     }
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
     }
