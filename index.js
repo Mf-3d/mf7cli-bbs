@@ -1,4 +1,4 @@
-"use strict";
+fix"use strict";
 
 const serverConfig = require('./server_config.json');
 
@@ -330,7 +330,7 @@ app.get("/users/2/:user_id/", async (req, res) => {
     // res.send(val.id + 'さんのページです。');
     res.render("./user_new_ui.ejs", {
       account: val,
-      thread: { name: val, id: val },
+      thread: { name: `users/${val.id}`, id: `users/${val.id}` },
       message: [],
       msg_length: 0,
       status: "",
@@ -1401,6 +1401,62 @@ app.get('/api/v1/thread_list', (req, res) => {
   });
 });
 
+app.all(`/api/v1/thread/users/:userId/`, async (req, res) => {
+  const db_id = `messages${req.params.userId}`;
+  let messages_db = await db.get(db_id);
+  if (messages_db === null || messages_db === undefined) {
+    messages_db = { message: [] };
+    messages_db.message[0] = { id: "system", text: `ここは${req.params.userId}です。`, pinned: true };
+  }
+
+  messages[req.params.userId] = messages_db;
+  db.set(db_id, messages[req.params.userId]);
+  
+  let start_length = req.query.start;
+  let load_length = req.query.length;
+  
+
+  if (load_length === 'max') {
+    load_length = messages[req.params.userId].message.length;
+  }
+
+  if (typeof start_length !== 'number' && req.query.start) {
+    start_length = Number(start_length);
+  }
+  if (typeof load_length !== 'number' && req.query.start) {
+    load_length = Number(load_length);
+  }
+  
+  if (typeof start_length !== 'number' && !req.query.start) {
+    start_length = 0;
+  }
+  
+  if (typeof load_length !== 'number' && !req.query.length) {
+    load_length = 10;
+    if (messages[req.params.userId].message.length - 1 < 10) {
+      load_length = messages[req.params.userId].message.length - 1;
+    }
+  }
+
+  if (start_length > messages[req.params.userId].message.length - 1) {
+    start_length = messages[req.params.userId].message.length - 1;
+  }
+
+  if (load_length > messages[req.params.userId].message.length) {
+    load_length = messages[req.params.userId].message.length;
+  }
+
+  for (let i = start_length; i < start_length + load_length; i++) {
+    try {
+      messages[req.params.userId].message[i].text = md.render(String(messages[req.params.userId].message[i].text));
+    } catch (e) {
+      messages[req.params.userId].message[i].text = '(このメッセージはStringではない型のメッセージです。)';
+    }
+  }
+
+  res.json(messages[req.params.userId].message.splice(-start_length, load_length));
+});
+
 // スレッド一覧を取得
 threads.threads.forEach((val) => {
   // const db_id = `messages${val}`;
@@ -1416,7 +1472,7 @@ threads.threads.forEach((val) => {
   //   });
   // });
 
-  app.all(`/api/v1/thread/${val}`, async (req, res) => {
+  app.all(`/api/v1/thread/${val}/`, async (req, res) => {
     const db_id = `messages${val}`;
     let messages_db = await db.get(db_id);
     if (messages_db === null || messages_db === undefined) {
@@ -1818,7 +1874,15 @@ io.on("connection", (socket) => {
   });
 
   socket.on("init", async (datas) => {
-    const db_datas = await db.get("messages" + datas.thread.id);
+    let db_datas;
+    if (datas.thread.id.slice(0, 6) === 'users/') {
+      db_datas = (await db.get("users" + datas.thread.id.slice(6))).messages;
+    } else {
+      db_datas = await db.get("messages" + datas.thread.id);
+    }
+    
+    if (!db_datas) db_datas = { message: [] };
+    
     for (let index = 0; index < db_datas.message.length; index++) {
       if (typeof db_datas.message[index].text === 'string') {
         // db_datas.message[index].text = escape_html(db_datas.message[index].text);
@@ -1842,9 +1906,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("woke-up", async (datas) => {
-    const db_datas = await db.get("messages" + datas.thread.id);
+    let db_datas;
+    if (datas.thread.id.slice(0, 6) === 'users/') {
+      db_datas = (await db.get("users" + datas.thread.id.slice(6))).messages;
+    } else {
+      db_datas = await db.get("messages" + datas.thread.id);
+    }
+    
     if (db_datas === undefined || db_datas === null) {
-      socket.emit("update_status", { text: "原因不明のエラーが発生しました。再読み込みしてみてください。" });
       return;
     }
     for (let i = 0; i < db_datas.message.length - 1; i++) {
@@ -1863,7 +1932,14 @@ io.on("connection", (socket) => {
 
 
   socket.on("post-msg", async (datas) => {
-    const db_datas = await db.get("messages" + datas.thread.id);
+    let db_datas;
+    if (datas.thread.id.slice(0, 6) === 'users/') {
+      return;
+    } else {
+      db_datas = await db.get("messages" + datas.thread.id);
+    }
+
+    
     if (typeof datas.msg.text !== "string") {
       socket.emit("update_status", { text: "君、メッセージじゃないものを送ろうとしたよね？許されると思ったかな？😟" });
       return;

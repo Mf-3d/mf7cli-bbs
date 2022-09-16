@@ -32,6 +32,21 @@
       <script src="/socket.io/socket.io.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> 
+      <%- include('scripts/thread.ejs', {
+        serverConfig, 
+        thread,
+        message,
+        msg_length,
+        status,
+        md,
+        db,
+        account,
+        cookies,
+        users_data,
+        i
+        })
+      %>
+      <%- include('scripts/thread_new_ui.ejs') %>
       <link rel="icon" type="image/png" href="/image/logo_circle" id="fav"/>
     </head>
   <body class="preload">
@@ -40,14 +55,14 @@
     </header>
 
     <!-- 全画面ローディング -->
-<!--     <div class="loader-wrap">
+    <div class="loader-wrap">
       <div class="loader"></div>
-    </div> -->
+    </div>
     
     <!-- メニューバー -->
     <aside>
-      <h2>users</h2>
-      <div id="userList"></div>
+      <h2>threads</h2>
+      <div id="threadList"></div>
       <!-- 通知リストを追加予定 -->
     </aside>
     <div id="columnsBox">
@@ -58,11 +73,17 @@
         <a href="/">Home</a>
         <br/>
         <h2 class="pageName">@<%= account.id %></h2>
+        <span id="status" style="transition: all 1.0s;">
+        <% if(status){ %>
+          <%= status %>
+        <% } %>
+        </span>
         <br/>
+        <div id="inputForm"></div>
         <% if(!account.icon) account.icon = "/image/default_icon" %>
-        <img style="width: 100px; height: 100px;" src="<%= account.icon %>"/>
+        <img style="width: 100px; height: 100px;" src="<%= account.icon %>" id="profileIcon"/>
         <br/>
-        <ul>
+        <ul id="profileBio">
           <% if(account.bio){ %>
             <% let bio = account.bio.replace('\n', '<br/>') %>
             <li>
@@ -76,12 +97,14 @@
             <li>自己紹介がありません。</li>
           <% } %>
         </ul>
+        <ul id="messages"></ul>
       </main>
       <footer>
         <%- include('footer.ejs') %>
       </footer>
     </div>
     <div id="statusColumn">
+      <%- include('status.ejs', {message_length: msg_length}) %>
     </div>    
   </body>
 </html>

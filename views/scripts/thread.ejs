@@ -29,7 +29,10 @@
 
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
     if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+    if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
+      document.getElementById("submit_text0").value = "";
+      return;
+    }
     
     socket.emit("post-msg", {
       thread: {
@@ -74,8 +77,10 @@
 
       if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
       if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
-      
+      if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
+        thread_name = `users/${document.location.href.slice(35)}`;
+      }
+
       socket.emit("woke-up", {
         thread: {id: thread_name}
       });
@@ -124,7 +129,9 @@
 
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
     if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+    if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
+      thread_name = `users/${document.location.href.slice(35)}`;
+    }
     
     socket.emit("init", {
       thread: {id: thread_name}
@@ -165,7 +172,7 @@
 
       if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
       if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+      if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
     
       if(data.thread.id === thread_name){
         const messages = document.getElementById("messages");
@@ -279,7 +286,7 @@
 
       if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
       if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+      if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
       
       if(data.thread.id === thread_name) {
         const messages = document.getElementById("messages");
@@ -484,7 +491,7 @@
 
       if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
       if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-      if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+      if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
       
       elm.addEventListener("click", () => {
         index = [].slice.call(lists2).indexOf(elm);

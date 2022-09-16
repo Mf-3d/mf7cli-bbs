@@ -52,7 +52,7 @@ aside {
   line-height: 1.5em;
 }
 
-#threadList a {
+a {
   cursor: pointer;
 }
 

@@ -40,9 +40,10 @@
       profileIcon.style = "width: 100px; height: 100px;";
       profileIcon.id = 'profileIcon'
       
-      document.getElementsByTagName('main')[0].append(profileIcon);
+      document.getElementById('messages').before(profileIcon);
 
       const bio = document.createElement('ul');
+      user.bio = escape_html(user.bio);
       user.bio = user.bio.replace(/\n/g, '<br/>');
       
       bio.innerHTML = `<li>
@@ -50,7 +51,7 @@
       </li>`;
       bio.id = 'profileBio';
 
-      document.getElementsByTagName('main')[0].append(bio);
+      document.getElementById('messages').before(bio);
       
       document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
     });
@@ -184,4 +185,18 @@
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
     }
   });
+
+  function escape_html(string) {
+    if (typeof string !== "string") return string;
+    return string.replace(/[&'`"<>]/g, (match) => {
+      return {
+        "&": "&amp;",
+        "'": "&#x27;",
+        "`": "&#x60;",
+        '"': "&quot;",
+        "<": "&lt;",
+        ">": "&gt;"
+      }[match];
+    });
+  }
 </script>
