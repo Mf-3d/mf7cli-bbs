@@ -1,4 +1,4 @@
-fix"use strict";
+"use strict";
 
 const serverConfig = require('./server_config.json');
 
