@@ -1573,7 +1573,6 @@ threads.threads.forEach((val) => {
 
     const messages_db = await db.get(db_id);
     if (messages_db !== null && messages_db !== undefined) {
-
       res.render("./thread.ejs", {
         thread: { name: val, id: val },
         message: [],
@@ -1894,6 +1893,7 @@ io.on("connection", (socket) => {
 
   socket.on("init", async (datas) => {
     let db_datas;
+    
     if (datas.thread.id.slice(0, 4) === 'sys/') {
       db_datas = { message: [] };
     } else if (datas.thread.id.slice(0, 6) === 'users/') {
@@ -1918,12 +1918,14 @@ io.on("connection", (socket) => {
     });
 
     rssParser.parseURL('https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf')
-      .then((feed) => {
-        socket.emit("update-rss", feed.items.splice(0, 10));
-      })
-      .catch((error) => {
-        console.error('RSS 取得失敗', error);
-      });
+    .then((feed) => {
+      socket.emit("update-rss", feed.items.splice(0, 10));
+    })
+    .catch((error) => {
+      console.error('RSS 取得失敗', error);
+    });
+
+    socket.emit('write-thread-cookie', db_datas);
   });
 
   socket.on("woke-up", async (datas) => {
