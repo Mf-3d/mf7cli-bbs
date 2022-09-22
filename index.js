@@ -272,6 +272,25 @@ app.get("/", async (req, res) => {
   });
 });
 
+app.get("/home/", async (req, res) => {
+  const account = await db.get(`users${req.cookies.id}`);
+  
+  res.render("./home.ejs", {
+    account,
+    thread: { name: `sys/home`, id: `sys/home` },
+    message: [],
+    msg_length: 0,
+    status: "",
+    md,
+    db,
+    cookies: req.cookies,
+    users_data: {
+      icon: []
+    },
+    serverConfig
+  });
+});
+
 // Socket.IOにしない(多分)
 app.get("/login", (req, res) => {
   if (req.query.callback) {
@@ -1875,7 +1894,9 @@ io.on("connection", (socket) => {
 
   socket.on("init", async (datas) => {
     let db_datas;
-    if (datas.thread.id.slice(0, 6) === 'users/') {
+    if (datas.thread.id.slice(0, 4) === 'sys/') {
+      db_datas = { message: [] };
+    } else if (datas.thread.id.slice(0, 6) === 'users/') {
       db_datas = (await db.get("users" + datas.thread.id.slice(6))).messages;
     } else {
       db_datas = await db.get("messages" + datas.thread.id);
@@ -1907,7 +1928,9 @@ io.on("connection", (socket) => {
 
   socket.on("woke-up", async (datas) => {
     let db_datas;
-    if (datas.thread.id.slice(0, 6) === 'users/') {
+    if (datas.thread.id.slice(0, 4) === 'sys/') {
+      db_datas = { message: [] };
+    } else if (datas.thread.id.slice(0, 6) === 'users/') {
       db_datas = (await db.get("users" + datas.thread.id.slice(6))).messages;
     } else {
       db_datas = await db.get("messages" + datas.thread.id);
@@ -1933,7 +1956,9 @@ io.on("connection", (socket) => {
 
   socket.on("post-msg", async (datas) => {
     let db_datas;
-    if (datas.thread.id.slice(0, 6) === 'users/') {
+    if (datas.thread.id.slice(0, 4) === 'sys/') {
+      return;
+    } else if (datas.thread.id.slice(0, 6) === 'users/') {
       return;
     } else {
       db_datas = await db.get("messages" + datas.thread.id);

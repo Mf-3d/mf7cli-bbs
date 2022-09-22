@@ -1,4 +1,5 @@
-<%
+<% 
+  let i = message.length - 1
   if(typeof serverConfig === 'undefined') {
     serverConfig = {
       "server_name": "???",
@@ -17,14 +18,14 @@
     <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
       <meta property="og:url" content="http://<%- serverConfig.server_domain %>"/>
       <meta property="og:type" content="article"/>
-      <meta property="og:title" content="@<%= account.id %> - <%- serverConfig.server_name %>"/>
+      <meta property="og:title" content="Home - <%- serverConfig.server_name %>"/>
       <meta property="og:description" content="ここは<%- serverConfig.admin_user %>さんの掲示板です。"/>
       <meta property="og:image" content="http://<%- serverConfig.server_domain %>/image/logo"/>
       <meta property="og:site_name" content="<%- serverConfig.server_name %>" />
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      <title>@<%= account.id %> - <%- serverConfig.server_name %></title>
+      <title>Home - <%- serverConfig.server_name %></title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
       <link rel="stylesheet" type="text/css" href="/style/style.css">
@@ -68,36 +69,23 @@
     <div id="columnsBox">
       <main>
         <div class="loader-wrap2 loaded">
-        <div class="loader"></div>
-      </div>
+          <div class="loader"></div>
+        </div>
         <a onclick="pageTransition('home')">Home</a>
         <br/>
-        <h2 class="pageName">@<%= account.id %></h2>
+        <h2 class="pageName">Highlight</h2>
+         
         <span id="status" style="transition: all 1.0s;">
         <% if(status){ %>
           <%= status %>
         <% } %>
         </span>
         <br/>
-        <div id="inputForm"></div>
-        <% if(!account.icon) account.icon = "/image/default_icon" %>
-        <img style="width: 100px; height: 100px;" src="<%= account.icon %>" id="profileIcon"/>
-        <br/>
-        <ul id="profileBio">
-          <% if(account.bio){ %>
-            <% let bio = account.bio.replace('\n', '<br/>') %>
-            <li>
-              <% let bios = account.bio.split('\n');  %>
-              <% for (var i = 0; i < bios.length; i++) {%>
-                <%= bios[i] %>
-                <br/>
-              <% } %>
-            </li>
-          <% } else{ %>
-            <li>自己紹介がありません。</li>
-          <% } %>
+        <div id="inputForm">
+          今後ここには、今月のハイライトやニュースが表示されます。   
+        </div>
+        <ul id="messages">
         </ul>
-        <ul id="messages"></ul>
       </main>
       <footer>
         <%- include('footer.ejs') %>

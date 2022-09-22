@@ -14,6 +14,14 @@
       return;
     }
 
+    if (type === 'home') {
+      if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
+      if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
+      document.getElementById('inputForm').innerHTML = '今後ここには、今月のハイライトやニュースが表示されます。';
+      homeTransition(changeUrl);
+      return;
+    }
+
     if (type === 'user') {
       document.getElementById('inputForm').innerHTML = '';
       userTransition(page, changeUrl);
@@ -55,6 +63,19 @@
       
       document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
     });
+  }
+
+  function homeTransition (changeUrl = true) {
+    if (changeUrl) history.pushState(null, null, `/home`);
+    
+    document.getElementsByClassName('pageName')[0].innerText = `Highlight`;
+    document.getElementsByTagName('title')[0].innerText = `Home - mf7cli-BBS`;
+
+    const messages = document.getElementById("messages");
+    messages.innerHTML = '';
+    document.getElementById('messageLength').innerHTML = '';
+    
+    document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
   }
   
   function threadTransition　(threadName, changeUrl = true) {
@@ -181,6 +202,9 @@
     }
     if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
       pageTransition('user', document.location.href.slice(35), false);
+    }
+    if (document.location.href.slice(8, 31) === 'bbs.mf7cli.potp.me/home') {
+      pageTransition('home', null, false);
     }
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
     }
