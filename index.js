@@ -1957,11 +1957,14 @@ io.on("connection", (socket) => {
 
   socket.on("post-msg", async (datas) => {
     let db_datas;
+    
     if (datas.thread.id.slice(0, 4) === 'sys/') {
       return;
     } else if (datas.thread.id.slice(0, 6) === 'users/') {
       return;
-    } else {
+    }　else if (datas.thread.id.slice(0, 2) === '２/') {
+      db_datas = await db.get("messages" + datas.thread.id.slice(2));
+    }　else {
       db_datas = await db.get("messages" + datas.thread.id);
     }
 
@@ -1975,7 +1978,7 @@ io.on("connection", (socket) => {
       return;
     }
     if (db_datas === undefined || db_datas === null) {
-      socket.emit("update_status", { text: "原因不明のエラーが発生しました。もう一度送信してみてください。" });
+      socket.emit("update_status", { text: "スレッドが存在しません。再読み込みをしてみてください。<br/>" + datas.thread.id });
       return;
     }
     socket.emit("update_status", { text: "DBとの接続に成功しました。" });
@@ -2065,135 +2068,174 @@ io.on("connection", (socket) => {
   // これ追加しないとバグる
   socket.on("delete-msg", async (datas) => {
     const db_id = `messages${datas.thread.id}`;
-    db.get(db_id).then((keys) => {
-      if (keys === null) {
-        socket.emit("update_status", { text: "スレッドが存在しません。再読み込みをしてみてください。" });
-      } else {
-        messages[datas.thread.id] = keys;
-        db.set(db_id, messages[datas.thread.id]);
-      }
-    });
+    let db_datas = await db.get(db_id);
 
+    if (!db_datas) {
+      socket.emit("update_status", { text: "スレッドが存在しません。再読み込みをしてみてください。" });
+      return;
+    }
+    
+    messages[datas.thread.id] = db_datas;
+    
     let user_id;
     if (datas.user.id) {
       user_id = `users${datas.user.id.toLowerCase()}`;
     } else {
-      user_id = `users${datas.user.id}`;
+      socket.emit("update_status", { text: "必要なデータが存在しません。再読み込みをしてみてください。 (User ID)" });
+      return;
     }
 
     const account = await db.get(user_id);
 
-    if (account !== null) {
-      if (datas.thread.delete_msg_id !== undefined) {
-        // 0 - (逆にしたい数 - 全体の数)
-        const msg_data = messages[datas.thread.id].message[-(datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1))];
-
-        if (msg_data !== null) {
-          if (msg_data.id === datas.user.id.toLowerCase()) {
-            if (datas.user.password !== account.password) return;
-            console.log(msg_data.id, "が", msg_data.text, "を削除しようとしています。");
-            messages[datas.thread.id].message.splice(0 - (datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1)), 1);
-
-            db.set(db_id, messages[datas.thread.id]).then(() => {
-              for (let i = 0; i < messages[datas.thread.id].message.length - 1; i++) {
-                if (i >= messages[datas.thread.id].message.length - 2) {
-                  socket.emit("update_status", { text: "メッセージを削除しました。" });
-                  io.emit("update_all_messages", {
-                    message: messages[datas.thread.id].message,
-                    thread: {
-                      id: datas.thread.id
-                    }
-                  });
-                } else if (typeof messages[datas.thread.id].message[i].text === "string") {
-                  messages[datas.thread.id].message[i].text = md.render(messages[datas.thread.id].message[i].text);
-                }
-              }
-            });
-          } else {
-            console.log(msg_data.id, datas.user.id.toLowerCase());
-            const users_id = [];
-            const user_icons = [];
-            for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
-              const user_id = messages[datas.thread.id].message[i].id;
-
-              if (users_id.indexOf(user_id) === -1) {
-                users_id[users_id.length] = user_id;
-                const user = await db.get("users" + user_id);
-                if (user.icon === undefined) user.icon = "/image/default_icon";
-                user_icons[user_icons.length] = user.icon;
-              } else {
-                users_id[users_id.length] = user_id;
-                let icon = user_icons[users_id.indexOf(user_id)];
-                if (icon === undefined) icon = "/image/default_icon";
-                user_icons[user_icons.length] = icon;
-              }
-            }
-
-            socket.emit("update_status", { text: "メッセージの削除は送信者と同じである必要があります。" });
-          }
-        } else {
-          const users_id = [];
-          const user_icons = [];
-          for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
-            const user_id = messages[datas.thread.id].message[i].id;
-
-            if (users_id.indexOf(user_id) === -1) {
-              users_id[users_id.length] = user_id;
-              const user = await db.get("users" + user_id);
-              if (user.icon === undefined) user.icon = "/image/default_icon";
-              user_icons[user_icons.length] = user.icon;
-            } else {
-              users_id[users_id.length] = user_id;
-              let icon = user_icons[users_id.indexOf(user_id)];
-              if (icon === undefined) icon = "/image/default_icon";
-              user_icons[user_icons.length] = icon;
-            }
-          }
-
-          socket.emit("update_status", { text: "メッセージが存在しません。" });
-        }
-      } else {
-        const users_id = [];
-        const user_icons = [];
-        for (let i = 0; i < messages[val].message.length; i++) {
-          const user_id = messages[val].message[i].id;
-
-          if (users_id.indexOf(user_id) === -1) {
-            users_id[users_id.length] = user_id;
-            const user = await db.get("users" + user_id);
-            if (user.icon === undefined) user.icon = "/image/default_icon";
-            user_icons[user_icons.length] = user.icon;
-          } else {
-            users_id[users_id.length] = user_id;
-            let icon = user_icons[users_id.indexOf(user_id)];
-            if (icon === undefined) icon = "/image/default_icon";
-            user_icons[user_icons.length] = icon;
-          }
-        }
-
-        socket.emit("update_status", { text: "削除に必要なデータが存在しません。もう一度リクエストしてください。" });
-      }
-    } else {
-      const users_id = [];
-      const user_icons = [];
-      for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
-        const user_id = messages[datas.thread.id].message[i].id;
-
-        if (users_id.indexOf(user_id) === -1) {
-          users_id[users_id.length] = user_id;
-          const user = await db.get("users" + user_id);
-          if (user.icon === undefined) user.icon = "/image/default_icon";
-          user_icons[user_icons.length] = user.icon;
-        } else {
-          users_id[users_id.length] = user_id;
-          let icon = user_icons[users_id.indexOf(user_id)];
-          if (icon === undefined) icon = "/image/default_icon";
-          user_icons[user_icons.length] = icon;
-        }
-      }
-
-      socket.emit("update_status", { text: "ログインしてください。" });
+    if (!account) {
+      socket.emit("update_status", { text: "ユーザーが存在しません。再読み込みをしてみてください。" });
+      return;
     }
+
+    if (datas.user.password !== account.password) {
+      socket.emit("update_status", { text: "ユーザーのパスワードが一致しません。再読み込みをしてみてください。" });
+      return;
+    }
+
+    if (typeof datas.thread.delete_msg_id !== 'number') {
+      socket.emit("update_status", { text: "必要なデータが存在しません。再読み込みをしてみてください。 (Delete message ID)" });
+      return;
+    }
+
+    const deleteMessage = messages[datas.thread.id].message[-(datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1))];
+
+    if (deleteMessage.id !== datas.user.id.toLowerCase()) {
+      socket.emit("update_status", { text: "メッセージの削除は送信者と同じである必要があります。" });
+      return;
+    }
+
+    const deletedMessage = messages[datas.thread.id].message.splice(-(datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1)), 1);
+    if (deletedMessage[0] !== deleteMessage) {
+      socket.emit("update_status", { text: "内部エラーが発生しました。(削除するはずのメッセージと削除しようとしたメッセージが一致しません)" });
+      console.log(...deletedMessage, deleteMessage)
+      return;
+    }
+
+    await db.set(db_id, messages[datas.thread.id]);
+    socket.emit("update_status", { text: "メッセージを削除しました。" });
+
+    io.emit("update_all_messages", {
+      message: (await db.get(db_id)).message,
+      thread: {
+        id: datas.thread.id
+      }
+    });
+  //   if (account !== null) {
+  //     if (datas.thread.delete_msg_id !== undefined) {
+  //       // 0 - (逆にしたい数 - 全体の数)
+  //       const msg_data = messages[datas.thread.id].message[-(datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1))];
+
+  //       if (msg_data !== null) {
+  //         if (msg_data.id === datas.user.id.toLowerCase()) {
+  //           if (datas.user.password !== account.password) return;
+  //           console.log(msg_data.id, "が", msg_data.text, "を削除しようとしています。");
+  //           messages[datas.thread.id].message.splice(-(datas.thread.delete_msg_id - (messages[datas.thread.id].message.length - 1)), 1);
+
+  //           db.set(db_id, messages[datas.thread.id]).then(() => {
+  //             for (let i = 0; i < messages[datas.thread.id].message.length - 1; i++) {
+  //               if (i >= messages[datas.thread.id].message.length - 2) {
+  //                 socket.emit("update_status", { text: "メッセージを削除しました。" });
+  //                 io.emit("update_all_messages", {
+  //                   message: messages[datas.thread.id].message,
+  //                   thread: {
+  //                     id: datas.thread.id
+  //                   }
+  //                 });
+  //               } else if (typeof messages[datas.thread.id].message[i].text === "string") {
+  //                 messages[datas.thread.id].message[i].text = md.render(messages[datas.thread.id].message[i].text);
+  //               }
+  //             }
+  //           });
+  //         } else {
+  //           console.log(msg_data.id, datas.user.id.toLowerCase());
+  //           const users_id = [];
+  //           const user_icons = [];
+  //           for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
+  //             const user_id = messages[datas.thread.id].message[i].id;
+
+  //             if (users_id.indexOf(user_id) === -1) {
+  //               users_id[users_id.length] = user_id;
+  //               const user = await db.get("users" + user_id);
+  //               if (user.icon === undefined) user.icon = "/image/default_icon";
+  //               user_icons[user_icons.length] = user.icon;
+  //             } else {
+  //               users_id[users_id.length] = user_id;
+  //               let icon = user_icons[users_id.indexOf(user_id)];
+  //               if (icon === undefined) icon = "/image/default_icon";
+  //               user_icons[user_icons.length] = icon;
+  //             }
+  //           }
+
+  //           socket.emit("update_status", { text: "メッセージの削除は送信者と同じである必要があります。" });
+  //         }
+  //       } else {
+  //         const users_id = [];
+  //         const user_icons = [];
+  //         for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
+  //           const user_id = messages[datas.thread.id].message[i].id;
+
+  //           if (users_id.indexOf(user_id) === -1) {
+  //             users_id[users_id.length] = user_id;
+  //             const user = await db.get("users" + user_id);
+  //             if (user.icon === undefined) user.icon = "/image/default_icon";
+  //             user_icons[user_icons.length] = user.icon;
+  //           } else {
+  //             users_id[users_id.length] = user_id;
+  //             let icon = user_icons[users_id.indexOf(user_id)];
+  //             if (icon === undefined) icon = "/image/default_icon";
+  //             user_icons[user_icons.length] = icon;
+  //           }
+  //         }
+
+  //         socket.emit("update_status", { text: "メッセージが存在しません。" });
+  //       }
+  //     } else {
+  //       const users_id = [];
+  //       const user_icons = [];
+  //       for (let i = 0; i < messages[val].message.length; i++) {
+  //         const user_id = messages[val].message[i].id;
+
+  //         if (users_id.indexOf(user_id) === -1) {
+  //           users_id[users_id.length] = user_id;
+  //           const user = await db.get("users" + user_id);
+  //           if (user.icon === undefined) user.icon = "/image/default_icon";
+  //           user_icons[user_icons.length] = user.icon;
+  //         } else {
+  //           users_id[users_id.length] = user_id;
+  //           let icon = user_icons[users_id.indexOf(user_id)];
+  //           if (icon === undefined) icon = "/image/default_icon";
+  //           user_icons[user_icons.length] = icon;
+  //         }
+  //       }
+
+  //       socket.emit("update_status", { text: "削除に必要なデータが存在しません。もう一度リクエストしてください。" });
+  //     }
+  //   } else {
+  //     const users_id = [];
+  //     const user_icons = [];
+  //     for (let i = 0; i < messages[datas.thread.id].message.length; i++) {
+  //       const user_id = messages[datas.thread.id].message[i].id;
+
+  //       if (users_id.indexOf(user_id) === -1) {
+  //         users_id[users_id.length] = user_id;
+  //         const user = await db.get("users" + user_id);
+  //         if (user.icon === undefined) user.icon = "/image/default_icon";
+  //         user_icons[user_icons.length] = user.icon;
+  //       } else {
+  //         users_id[users_id.length] = user_id;
+  //         let icon = user_icons[users_id.indexOf(user_id)];
+  //         if (icon === undefined) icon = "/image/default_icon";
+  //         user_icons[user_icons.length] = icon;
+  //       }
+  //     }
+
+  //     socket.emit("update_status", { text: "ログインしてください。" });
+  //   }
   });
 });
 

@@ -26,13 +26,13 @@
     // document.getElementById("login_form").submit();
     twemoji.parse(document.body);
     let thread_name;
-
-    if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
     // else if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/home/') thread_name = 'sys/home';
-    else if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/home/') {
+    if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/home/') {
       document.getElementById("submit_text0").value = "";
       return;
-    } else if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+    } 
+    else if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+    else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
     else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
       document.getElementById("submit_text0").value = "";
       return;
@@ -81,9 +81,9 @@
     window.addEventListener('focus', () => {
       let thread_name;
 
-      if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
-      else if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/home/') thread_name = 'sys/home';
+      if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/home/') thread_name = 'sys/home';
       else if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+      else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
       else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
         thread_name = `users/${document.location.href.slice(35)}`;
       } else {
@@ -138,13 +138,14 @@
 
 
     // else if (document.location.href.slice(8, 31) === 'bbs.mf7cli.potp.me/home') thread_name = 'sys/home';
-    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
-    else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
-    else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
-      thread_name = `users/${document.location.href.slice(35)}`;
-    } else {
-      thread_name = 'sys/home';
-    }
+      if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/home/') thread_name = 'sys/home';
+      else if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36);
+      else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+      else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
+        thread_name = `users/${document.location.href.slice(35)}`;
+      } else {
+        return;
+      }
 
     socket.emit("init", {
       thread: {id: thread_name}

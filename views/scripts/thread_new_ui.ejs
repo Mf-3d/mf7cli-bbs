@@ -157,11 +157,19 @@
   
       lists2.forEach((elm) => {
         elm.addEventListener("click", () => {
-          index = [].slice.call(lists2).indexOf(elm);
+          let index = lists2.indexOf(elm);
           console.log(index);
+          let thread_name;
+          if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36); 
+          else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+          else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+          else {
+            return;
+          }
+          
           socket.emit("delete-msg", {
             thread: {
-              id: "<%= thread.name %>",
+              id: thread_name,
               delete_msg_id: index
             },
             user: {
