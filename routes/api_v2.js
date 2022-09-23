@@ -1,4 +1,4 @@
-const express = require('express')
+const express = require('express');
 const userManager = require('../lib/userManager');
 const fs = require('fs');
 const bcrypt = require("bcrypt");
