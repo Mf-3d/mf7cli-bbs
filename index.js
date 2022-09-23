@@ -189,6 +189,7 @@ app.use(cookieparser());
 app.use("/image", express.static(__dirname + "/views/image"));
 app.use("/scripts", express.static(__dirname + "/views/scripts"));
 app.use("/image/badges", express.static(__dirname + "/views/image/badges"));
+app.use("/api/v2", require(`./routes/api_v2.js`));
 
 // bbs.mf7cli.tkに飛ばすやつ
 app.use((req, res, next) => {
@@ -1924,8 +1925,6 @@ io.on("connection", (socket) => {
     .catch((error) => {
       console.error('RSS 取得失敗', error);
     });
-
-    socket.emit('write-thread-cookie', db_datas);
   });
 
   socket.on("woke-up", async (datas) => {
