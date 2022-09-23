@@ -3,14 +3,60 @@
   <input type="checkbox" id="cb_toggle_switch" checked/>
   <label for="cb_toggle_switch"></label>
 </div>
+<div class="right" style="display: inline-block; _display: inline;">
+  <img id="accountIcon" src="/image/default_icon.jpeg" style="transition: border 0.1s; border: solid 0px #42424200; cursor: pointer; width: 20px; height: 20px; vertical-align: middle;"/>
+
+
+  <div id="accountMenu">
+    <p>
+      <span id="accountId" style="vertical-align: middle; user-select: none;"></span>
+      <br/><br/>
+      <a href="/register" id="accountMenu_Register" style="display: none;">
+        Register
+      </a>
+      <a href="/login" id="accountMenu_Login" style="display: none;">
+        Login
+      </a>
+      <a href="/logout" id="accountMenu_Logout">
+        Logout
+      </a>
+      <a href="/settings" id="accountMenu_Settings">
+        Settings
+      </a>
+    </p>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
 <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
 <script>
+  (async () => {
+    document.getElementById('accountIcon').onclick = () => {
+      document.getElementById('accountMenu').classList.toggle('show');
+      document.getElementById('accountIcon').classList.toggle('active');
+    }
+    
+    if (!Cookies.get('id')) {
+      document.getElementById('accountId').innerHTML = `ゲスト`;
+      document.getElementById('accountMenu_Register').style.display = 'block';
+      document.getElementById('accountMenu_Login').style.display = 'block';
+      document.getElementById('accountMenu_Logout').style.display = 'none';
+      document.getElementById('accountMenu_Settings').style.display = 'none';
+      return;
+    }
+    document.getElementById('accountId').innerHTML = `@${Cookies.get('id')}`;
+    
+    const userDataRes = await fetch(`/api/v2/user/get/${Cookies.get('id')}`);
+    const userData = await userDataRes.json();
+
+    document.getElementById('accountIcon').src = userData.icon;
+  })();
+  
   const prefersColorSchemeDark = matchMedia(
     '(prefers-color-scheme: dark)'
   ).matches;
 
   console.log(localStorage.getItem("theme"));
-  
+
   if (localStorage.getItem("theme") === "dark") {
     document.body.className = 'dark';
     document.getElementById("cb_toggle_switch").checked = false;

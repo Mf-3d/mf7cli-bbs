@@ -1,5 +1,6 @@
 <script>
   function pageTransition　(type, page, changeUrl = true) {
+    document.getElementById("status").innerHTML = '';
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
     
     if (type === 'thread') {

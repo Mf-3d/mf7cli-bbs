@@ -438,6 +438,46 @@ header a {
     left: calc(100% - 1em + 0.05em);
 }
 
+header .right {
+  text-align: right;
+  width: 50%;
+  right: 0;
+  position: fixed;
+  margin-right: 1em;
+}
+
+#accountMenu {
+  padding: 1em;
+  border-radius: 5px;
+  background: #252525;
+  color: #f0f0f0!important;
+  border: solid 1px #424242;
+  width: 10em;
+  text-align: left;
+  right: 0;
+  position: fixed;
+  margin: 1em;
+  display: none;
+}
+
+#accountIcon.active {
+  border: solid 5px #424242!important;
+}
+
+#accountMenu p {
+  position: static;
+}
+
+#accountMenu a {
+  position: static;
+  display: block;
+  border-bottom: solid 1px #424242;
+}
+
+#accountMenu.show {
+  display: block;
+}
+
 /* ダークモード */
 .dark {
   background: #252525;

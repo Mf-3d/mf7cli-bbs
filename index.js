@@ -1897,6 +1897,7 @@ io.on("connection", (socket) => {
     
     if (datas.thread.id.slice(0, 4) === 'sys/') {
       db_datas = { message: [] };
+      socket.emit("loaded", {});
     } else if (datas.thread.id.slice(0, 6) === 'users/') {
       db_datas = (await db.get("users" + datas.thread.id.slice(6))).messages;
     } else {
