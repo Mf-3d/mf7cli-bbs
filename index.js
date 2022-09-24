@@ -2,6 +2,7 @@
 
 const serverConfig = require('./server_config.json');
 
+const helmet = require('helmet');
 const express = require("express");
 const multer = require("multer");
 const maxSize = 1 * 1000 * 1000;
@@ -185,6 +186,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 // 絶対使う
 app.use(cookieparser());
+// XSS対策
+app.use(helmet.xssFilter());
+// クリックジャッキング対策
+app.use(helmet.frameguard({ action: "sameorigin" }));
 // あれだよ
 app.use("/image", express.static(__dirname + "/views/image"));
 app.use("/scripts", express.static(__dirname + "/views/scripts"));
