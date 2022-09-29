@@ -74,12 +74,15 @@
         <a onclick="pageTransition('home')">Home</a>
         <br/>
         <h2 class="pageName">Highlight</h2>
-         
-        <span id="status" style="transition: all 1.0s;">
+
         <% if(status){ %>
-          <%= status %>
-        <% } %>
+        <span id="status" style="transition: all 1.0s;" data-content="<%- status %>">
+          <%- status %>
         </span>
+        <% } else { %>
+        <span id="status" style="transition: all 1.0s;" data-content="">
+        </span>
+        <% } %>
         <br/>
         <div id="inputForm">
           今後ここには、今月のハイライトやニュースが表示されます。   

@@ -1,4 +1,5 @@
 <%
+  let i = 0;
   if(typeof serverConfig === 'undefined') {
     serverConfig = {
       "server_name": "???",
@@ -17,14 +18,14 @@
   <head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# website: http://ogp.me/ns/website#">
     <meta property="og:url" content="http://<%- serverConfig.server_domain %>"/>
     <meta property="og:type" content="article"/>
-    <meta property="og:title" content="@<%= account.id %> - <%- serverConfig.server_name %>"/>
+    <meta property="og:title" content="Login - <%- serverConfig.server_name %>"/>
     <meta property="og:description" content="ここは<%- serverConfig.admin_user %>さんの掲示板です。"/>
     <meta property="og:image" content="http://<%- serverConfig.server_domain %>/image/logo"/>
     <meta property="og:site_name" content="<%- serverConfig.server_name %>" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>@<%= account.id %> - <%- serverConfig.server_name %></title>
+    <title>Login - <%- serverConfig.server_name %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
       
     <link rel="stylesheet" type="text/css" href="/style/style.css">
@@ -45,7 +46,7 @@
       users_data,
       i
       })
-    %>
+      %>
     <%- include('scripts/thread_new_ui.ejs') %>
     <link rel="icon" type="image/png" href="/image/logo_circle" id="fav"/>
   </head>
@@ -72,7 +73,7 @@
       </div>
         <a onclick="pageTransition('home')">Home</a>
         <br/>
-        <h2 class="pageName">@<%= account.id %></h2>
+        <h2 class="pageName">Login</h2>
         <% if(status){ %>
         <span id="status" style="transition: all 1.0s;" data-content="<%- status %>">
           <%- status %>
@@ -82,27 +83,25 @@
         </span>
         <% } %>
         <br/>
-        <% if(!account.icon) account.icon = "/image/default_icon" %>
-        <img style="width: 100px; height: 100px;" src="<%= account.icon %>" id="profileIcon"/>
-        <div id="inputForm" class="userPage">
-          <textarea placeholder="テキストを入力してください。" class="submit_text" maxlength="150" id="submit_text0" name="submit_text"></textarea>
+        <form method="post" action="/login/2" id="login_form">
+          <input type="text" autocomplete="username" min="5" placeholder="IDを入力してください。" id="submit_id" name="submit_id"/>
           <br/>
-          <input type="button" onclick="submitUserLog()" id="submit_button" value="送信"/>
-        </div>
-        <ul id="profileBio">
-          <% if(account.bio){ %>
-            <% let bio = account.bio.replace('\n', '<br/>') %>
-            <li>
-              <% let bios = account.bio.split('\n');  %>
-              <% for (var i = 0; i < bios.length; i++) {%>
-                <%= bios[i] %>
-                <br/>
-              <% } %>
-            </li>
-          <% } else{ %>
-            <li>自己紹介がありません。</li>
-          <% } %>
-        </ul>
+          <input type="password" autocomplete="current-password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
+          <br/>
+          <input type="button" onclick="submit()" value="送信"/>
+          <br/>
+          <br/>
+          まだアカウントをお持ちではないですか？<a href="/register">Register</a>
+          <br/>
+          <a href="/sessions/forgot_password">パスワードを忘れた場合</a>
+          <br/>
+          <br/>
+          ログインできない場合<br/>
+          <ul>
+            <li>メール認証を済ませているか確認してください。</li>
+          </ul>
+        </form>
+        <div id="inputForm"></div>
         <ul id="messages"></ul>
       </main>
       <footer>

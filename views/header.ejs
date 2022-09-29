@@ -4,8 +4,16 @@
   <label for="cb_toggle_switch"></label>
 </div>
 <div class="right" style="display: inline-block; _display: inline;">
-  <img id="accountIcon" src="/image/default_icon.jpeg" style="transition: border 0.1s; border: solid 0px #42424200; cursor: pointer; width: 20px; height: 20px; vertical-align: middle;"/>
-
+  <div id="accountIconBox" style="border: solid 0px #42424200; cursor: pointer; width: 20px; height: 20px; vertical-align: middle;">
+    <img id="accountIcon" src="/image/default_icon.jpeg" style="
+      transition: all 0.1s; 
+      border: solid 0px #42424200; 
+      cursor: pointer; 
+      width: 20px; height: 20px; 
+      vertical-align: middle;
+      margin-top: -4px;"
+    />
+  </div>
 
   <div id="accountMenu">
     <p>
@@ -14,7 +22,7 @@
       <a href="/register" id="accountMenu_Register" style="display: none;">
         Register
       </a>
-      <a href="/login" id="accountMenu_Login" style="display: none;">
+      <a href="/login" onclick="pageTransition('system', 'login', true)" id="accountMenu_Login" style="display: none;">
         Login
       </a>
       <a href="/logout" id="accountMenu_Logout">
@@ -30,9 +38,12 @@
 <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
 <script>
   (async () => {
-    document.getElementById('accountIcon').onclick = () => {
+    if (typeof pageTransition === 'function') document.getElementById('accountMenu_Login').removeAttribute('href');
+    else document.getElementById('accountMenu_Login').removeAttribute('onclick');
+      
+    document.getElementById('accountIconBox').onclick = () => {
       document.getElementById('accountMenu').classList.toggle('show');
-      document.getElementById('accountIcon').classList.toggle('active');
+      document.getElementById('accountIconBox').classList.toggle('active');
     }
     
     if (!Cookies.get('id')) {

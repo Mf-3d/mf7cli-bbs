@@ -1,5 +1,6 @@
 const express = require('express')
 const userManager = require('../lib/userManager');
+const threadManager = require('../lib/threadManager');
 const fs = require('fs');
 const bcrypt = require("bcrypt");
 const DBClient = require("@replit/database");
@@ -23,6 +24,12 @@ router.all('/user/get/:user_id/', async (req, res) => {
   }
   
   res.json(val);
+});
+
+router.all('/user/getLog/:user_id', async (req, res) => {
+  res.json(
+    await threadManager.getUsersThread(req.params.user_id, 0, 'max')
+  );
 });
 
 

@@ -31,6 +31,7 @@ const rqt = require('./lib/promiseRqt');
 const uuidjs = require("uuidjs");
 
 const userManager = require('./lib/userManager');
+const threadManager = require('./lib/threadManager');
 
 // メッセージを自動更新するためのやつ
 const io = require("socket.io")(server);
@@ -320,6 +321,112 @@ app.get("/login", (req, res) => {
     status: "",
     redirect_uri: null,
     serverConfig
+  });
+});
+
+// ログインUIも新しくする
+app.get("/login/2/", async (req, res) => {
+  if (req.query.callback) {
+    if (!req.query.appName) {
+      res.send('URLのパラメータが足りていません。');
+      return;
+    }
+    res.render("./login_callback.ejs", {
+      status: "",
+      redirect_uri: null,
+      query: {
+        appName: req.query.appName,
+        callback: req.query.callback
+      },
+      serverConfig
+    });
+
+    return;
+  }
+  res.render("./login_new_ui.ejs", {
+    status: "",
+    redirect_uri: null,
+    account: await db.get(`users${req.cookies.id}`),
+    thread: { name: null, id: null },
+    message: [],
+    msg_length: 0,
+    status: "",
+    md,
+    db,
+    cookies: req.cookies,
+    users_data: {
+      icon: []
+    },
+    serverConfig
+  });
+});
+
+
+app.post("/login/2/", async (req, res) => {
+  const user_id = `users${req.body.submit_id[0].toLowerCase()}`;
+  db.get(user_id).then(async (val) => {
+    if (val !== null && req.body.submit_id[0].length >= 5) {
+      if (bcrypt.compareSync(req.body.submit_id[1], val.password)) {
+        console.log(req.body.submit_id[0] + "がログインしました");
+        res.cookie("id", req.body.submit_id[0].toLowerCase(), {
+          maxAge: 3e9,
+          httpOnly: false
+        });
+        res.cookie("password", val.password, {
+          maxAge: 3e9,
+          httpOnly: false
+        });
+        res.render("./home.ejs", {
+          status: "ログインに成功しました。",
+          redirect_uri: null,
+          account: await db.get(`users${req.cookies.id}`),
+          thread: { name: `sys/home`, id: `sys/home` },
+          message: [],
+          msg_length: 0,
+          md,
+          db,
+          cookies: req.cookies,
+          users_data: {
+            icon: []
+          },
+          serverConfig
+        });
+      } else {
+        console.log(req.body.submit_id[0] + 'がログインに失敗しました。パスワードがDBのパスワードと一致しません。"');
+        res.render("./login_new_ui.ejs", {
+          status: "ログインに失敗しました。パスワードがDBのパスワードと一致しません。",
+          redirect_uri: null,
+          account: await db.get(`users${req.cookies.id}`),
+          thread: { name: null, id: null },
+          message: [],
+          msg_length: 0,
+          md,
+          db,
+          cookies: req.cookies,
+          users_data: {
+            icon: []
+          },
+          serverConfig
+        });
+      }
+    } else {
+      console.log(req.body.submit_id[0] + "は存在しません");
+      res.render("./login_new_ui.ejs", {
+        status: "ユーザーが存在しません。",
+        redirect_uri: null,
+        account: await db.get(`users${req.cookies.id}`),
+        thread: { name: null, id: null },
+        message: [],
+        msg_length: 0,
+        md,
+        db,
+        cookies: req.cookies,
+        users_data: {
+          icon: []
+        },
+        serverConfig
+      });
+    }
   });
 });
 
@@ -1431,7 +1538,6 @@ app.all(`/api/v1/thread/users/:userId/`, async (req, res) => {
   let messages_db = await db.get(db_id);
   if (messages_db === null || messages_db === undefined) {
     messages_db = { message: [] };
-    messages_db.message[0] = { id: "system", text: `ここは${req.params.userId}です。`, pinned: true };
   }
 
   messages[req.params.userId] = messages_db;
@@ -1502,7 +1608,6 @@ threads.threads.forEach((val) => {
     let messages_db = await db.get(db_id);
     if (messages_db === null || messages_db === undefined) {
       messages_db = { message: [] };
-      messages_db.message[0] = { id: "system", text: `ここは${val}です。`, pinned: true };
     }
 
     messages[val] = messages_db;
@@ -1904,7 +2009,7 @@ io.on("connection", (socket) => {
       db_datas = { message: [] };
       socket.emit("loaded", {});
     } else if (datas.thread.id.slice(0, 6) === 'users/') {
-      db_datas = (await db.get("users" + datas.thread.id.slice(6))).messages;
+      db_datas = { message: (await threadManager.getUsersThread(datas.thread.id.slice(6), 0, 'max')) };
     } else {
       db_datas = await db.get("messages" + datas.thread.id);
     }
@@ -2070,11 +2175,130 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("post-user-log", async (datas) => {
+    let db_datas = { message: await threadManager.getUsersThread(datas.thread.id, 0, 'max') };
+
+    
+    if (typeof datas.msg.text !== "string") {
+      socket.emit("update_status", { text: "君、メッセージじゃないものを送ろうとしたよね？許されると思ったかな？😟" });
+      return;
+    }
+    if (100 < datas.msg.text.length) {
+      socket.emit("update_status", { text: "メッセージは100文字以内にしてください。" });
+      return;
+    }
+    if (!db_datas) {
+      socket.emit("update_status", { text: "スレッドが存在しません。再読み込みをしてみてください。<br/>" + datas.thread.id });
+      return;
+    }
+    
+    socket.emit("update_status", { text: "DBとの接続に成功しました。" });
+    
+    if (!datas.user.id) {
+      socket.emit("update_status", { text: "ログインしてください。" });
+      return;
+    }
+    
+    const user_datas = await db.get("users" + datas.user.id);
+    
+    if (!user_datas) {
+      socket.emit("update_status", { text: "ユーザーが見つかりません。もう一度ログインしてみてください。" });
+      return;
+    }
+    
+    socket.emit("update_status", { text: "DBからユーザーデータを取得しました。" });
+    
+    if (datas.user.password !== user_datas.password) {
+      socket.emit("update_status", { text: "パスワードが一致しませんでした。もう一度ログインしてみてください。" });
+      return;
+    }
+    socket.emit("update_status", { text: "入力したパスワードが一致しました。" });
+    if (datas.user.id !== datas.thread.id) {
+      socket.emit("update_status", { text: "メッセージの送信をする権限がありません。" });
+      return;
+    }
+      
+    if (/^[\s\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+$/.test(datas.msg.text) || !datas.msg.text || datas.msg.text === "") {
+      socket.emit("update_status", { text: "メッセージが入力されていません。" });
+      return;
+    }
+    socket.emit("update_status", { text: "メッセージが入力されていることを確認しました。" });
+    if (db_datas.message.length < max_msg) {
+      socket.emit("update_status", { text: "メッセージの上限に達していません。" });
+
+      db_datas.message[db_datas.message.length] = {
+        id: datas.user.id,
+        text: escape_html(datas.msg.text),
+        pinned: false,
+        date: new Date()
+      };
+
+      if (!user_datas.icon) {
+        user_datas.icon = "/image/default_icon";
+      }
+
+      await threadManager.setUsersThread(datas.thread.id, db_datas);
+      // db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
+      socket.emit("update_status", { text: "メッセージを送信しました。" });
+    } else {
+      socket.emit("update_status", { text: "メッセージの上限に達しています。" });
+      let i = 0;
+      const autoDeleteMessage = function autoDeleteMessage() {
+        if (!db_datas.message[i].pinned) {
+          db_datas.message.splice(i, 1);
+        } else if (messages[datas.thread.id][i].pinned) {
+          i += 1;
+          autoDeleteMessage();
+        }
+      };
+      autoDeleteMessage();
+
+      db_datas.message[db_datas.message.length] = {
+        id: datas.user.id,
+        text: escape_html(datas.msg.text),
+        pinned: false,
+        date: new Date()
+      };
+
+      if (user_datas.icon === undefined) {
+        user_datas.icon = "/image/default_icon";
+      }
+
+      await threadManager.setUsersThread(datas.thread.id, db_datas);
+      // db_datas.message[db_datas.message.length - 1].text = md.render(db_datas.message[db_datas.message.length - 1].text);
+      socket.emit("update_status", { text: "メッセージの上限に達していたため古いメッセージを削除しました。" });
+    }
+
+    for (let index = 0; index < db_datas.message.length; index++) {
+      if (typeof db_datas.message[index].text === 'string') {
+        // db_datas.message[index].text = escape_html(db_datas.message[index].text);
+        db_datas.message[index].text = md.render(db_datas.message[index].text);
+      }
+    }
+
+    io.emit("update_all_messages", {
+      message: db_datas.message,
+      thread: {
+        id: `users/${datas.thread.id}`
+      }
+    });
+  });
+
   // val
   // これ追加しないとバグる
   socket.on("delete-msg", async (datas) => {
     const db_id = `messages${datas.thread.id}`;
-    let db_datas = await db.get(db_id);
+    let db_datas;
+
+    if (datas.thread.id.slice(0, 4) === 'sys/') {
+      return;
+    } else if (datas.thread.id.slice(0, 6) === 'users/') {
+      db_datas = { message: await threadManager.getUsersThread(datas.thread.id.slice(6), 0, 'max') };
+    }　else if (datas.thread.id.slice(0, 2) === '２/') {
+      db_datas = await db.get("messages" + datas.thread.id.slice(2));
+    }　else {
+      db_datas = await db.get(db_id);
+    }
 
     if (!db_datas) {
       socket.emit("update_status", { text: "スレッドが存在しません。再読み込みをしてみてください。" });
@@ -2122,11 +2346,20 @@ io.on("connection", (socket) => {
       return;
     }
 
-    await db.set(db_id, messages[datas.thread.id]);
+    if (datas.thread.id.slice(0, 4) === 'sys/') {
+      return;
+    } else if (datas.thread.id.slice(0, 6) === 'users/') {
+      threadManager.setUsersThread(datas.thread.id.slice(6), messages[datas.thread.id]);
+    }　else if (datas.thread.id.slice(0, 2) === '２/') {
+      await db.set(db_id, messages[datas.thread.id]);
+    }　else {
+      await db.set(db_id, messages[datas.thread.id]);
+    }
+    
     socket.emit("update_status", { text: "メッセージを削除しました。" });
 
     io.emit("update_all_messages", {
-      message: (await db.get(db_id)).message,
+      message: messages[datas.thread.id].message,
       thread: {
         id: datas.thread.id
       }

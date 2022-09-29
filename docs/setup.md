@@ -5,9 +5,9 @@
 
 改造すればReplitやGmailがなくても生やせます。
 ## 1. Replitリポジトリからフォークする
-GitHubからでも大丈夫ですが、
+（GitHubからでもいいけど、
 結局Replitのリポジトリを作るので、
-Replitからフォークした方がいいと思います。
+Replitからフォークした方がいいと思う（？））
 
 [Replitリポジトリ](https://replit.com/@mf7cli/mf7cli-bbs)
 
@@ -53,6 +53,3 @@ Replitからフォークした方がいいと思います。
 
 ## 5. 起動
 `node .`かRunボタンを押せば起動します。
-
-
-これで生やせました。

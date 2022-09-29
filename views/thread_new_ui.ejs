@@ -74,11 +74,14 @@
         <a onclick="pageTransition('home')">Home</a>
         <br/>
         <h2 class="pageName">#<%= thread.name %></h2>
-        <span id="status" style="transition: all 1.0s;">
         <% if(status){ %>
-          <%= status %>
-        <% } %>
+        <span id="status" style="transition: all 1.0s;" data-content="<%- status %>">
+          <%- status %>
         </span>
+        <% } else { %>
+        <span id="status" style="transition: all 1.0s;" data-content="">
+        </span>
+        <% } %>
         <br/>
         <div id="inputForm">
           <textarea placeholder="テキストを入力してください。" class="submit_text" maxlength="150" id="submit_text0" name="submit_text"></textarea>

@@ -460,8 +460,39 @@ header .right {
   display: none;
 }
 
-#accountIcon.active {
+#accountIconBox {
+  display: inline;
+}
+
+#accountIconBox::before {
+  border-radius: 50%;
+  content: "";
+  position: absolute;
+  border: solid 0px #424242;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.1s; 
+  top: -4px;
+  right: 0px;
+}
+
+#accountIconBox.active::before {
+  display: inline;
+  opacity: 1;
+  pointer-events: auto;  
+  width: 30px!important;
+  height: 30px!important;
+  top: -9px;
+  right: -10px;
   border: solid 5px #424242!important;
+}
+
+#accountIconBox.active > #accountIcon {
+  width: 30px!important;
+  height: 30px!important;
+  margin-right: -4px;
 }
 
 #accountMenu p {

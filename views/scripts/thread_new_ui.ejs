@@ -1,9 +1,12 @@
 <script>
   function pageTransition　(type, page, changeUrl = true) {
     document.getElementById("status").innerHTML = '';
+    document.getElementById("status").setAttribute('data-content', '');
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
     
     if (type === 'thread') {
+      if (document.getElementById('login_form')) document.getElementById('login_form').innerHTML = '';
+      
       if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
       if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
       document.getElementById('inputForm').innerHTML = `
@@ -16,6 +19,8 @@
     }
 
     if (type === 'home') {
+      if (document.getElementById('login_form')) document.getElementById('login_form').innerHTML = '';
+      
       if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
       if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
       document.getElementById('inputForm').innerHTML = '今後ここには、今月のハイライトやニュースが表示されます。';
@@ -23,14 +28,88 @@
       return;
     }
 
-    if (type === 'user') {
+    if (type === 'user') {      
+      if (document.getElementById('login_form')) document.getElementById('login_form').innerHTML = '';
+      
       document.getElementById('inputForm').innerHTML = '';
       userTransition(page, changeUrl);
       return;
     }
+
+    if (type === 'system') {
+      if (page === 'login') loginTransition(changeUrl);
+    }
+  }
+
+  function loginTransition(changeUrl) {
+    document.getElementById('inputForm').classList.remove('userPage');
+    
+    if (changeUrl) history.pushState(null, null, `/login/2`);
+
+    document.getElementById('inputForm').innerHTML = '';
+    document.getElementsByClassName('pageName')[0].innerText = `Login`;
+    document.getElementsByTagName('title')[0].innerText = `Login - mf7cli-BBS`;
+    if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
+    if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
+      
+    if (document.getElementById('login_form')) document.getElementById('login_form').innerHTML = `
+    <input type="text" autocomplete="username" min="5" placeholder="IDを入力してください。" id="submit_id" name="submit_id"/>
+    <br/>
+    <input type="password" autocomplete="current-password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
+    <br/>
+    <input type="button" onclick="submit()" value="送信"/>
+    <br/>
+    <br/>
+    まだアカウントをお持ちではないですか？<a href="/register">Register</a>
+    <br/>
+    <a href="/sessions/forgot_password">パスワードを忘れた場合</a>
+    <br/>
+    <br/>
+    ログインできない場合<br/>
+    <ul>
+      <li>メール認証を済ませているか確認してください。</li>
+    </ul>`;
+    else {
+      let form = document.createElement('form');
+      form.id = 'login_form';
+      form.method = 'POST';
+      form.action = '/login/2';
+      form.innerHTML = `
+      <input type="text" autocomplete="username" min="5" placeholder="IDを入力してください。" id="submit_id" name="submit_id"/>
+      <br/>
+      <input type="password" autocomplete="current-password" min="8" placeholder="パスワードを入力してください。" id="submit_password" name="submit_id"/>
+      <br/>
+      <input type="button" onclick="submit()" value="送信"/>
+      <br/>
+      <br/>
+      まだアカウントをお持ちではないですか？<a href="/register">Register</a>
+      <br/>
+      <a href="/sessions/forgot_password">パスワードを忘れた場合</a>
+      <br/>
+      <br/>
+      ログインできない場合<br/>
+      <ul>
+        <li>メール認証を済ませているか確認してください。</li>
+      </ul>`;
+      document.getElementById('messages').before(form);
+    }
+
+    document.getElementById("messages").innerHTML = '';
+    document.getElementById('messageLength').innerHTML = '';
+
+    document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
   }
 
   function userTransition (userName, changeUrl = true) {
+    document.getElementById('inputForm').classList.add('userPage');
+    document.getElementById('inputForm').innerHTML = `
+    <textarea placeholder="テキストを入力してください。" class="submit_text submit_text_2" maxlength="150" id="submit_text0" name="submit_text"></textarea>
+    <br/>
+    <input type="button" onclick="submitUserLog()" id="submit_button" value="送信"/>`;
+    
+    if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
+    if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
+  
     if (changeUrl) history.pushState(null, null, `/users/2/${userName}`);
     
     document.getElementsByClassName('pageName')[0].innerText = `@${userName}`;
@@ -49,7 +128,7 @@
       profileIcon.style = "width: 100px; height: 100px;";
       profileIcon.id = 'profileIcon'
       
-      document.getElementById('messages').before(profileIcon);
+      document.getElementById('inputForm').before(profileIcon);
 
       const bio = document.createElement('ul');
       user.bio = escape_html(user.bio);
@@ -61,12 +140,114 @@
       bio.id = 'profileBio';
 
       document.getElementById('messages').before(bio);
-      
-      document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
+
+      fetch(`https://bbs.mf7cli.potp.me/api/v2/user/getLog/${userName}?length=max`)
+      .then(response => response.json())
+      .then(async thread => {
+        let opened_index = undefined;
+        
+        const messages = document.getElementById("messages");
+        messages.innerHTML = ``;
+        document.getElementById('messageLength').innerHTML = thread.length;
+        
+        await thread.forEach((message, i) => {
+          const li = document.createElement("li");
+          const date = new Date(message.date);
+          let min;
+          // date.setHours(date.getHours() + 9);
+          if(String(date.getMinutes()).length === 1){
+            min = "0" + date.getMinutes();
+          }
+          else{
+            min =  date.getMinutes();
+          }
+          li.innerHTML = `
+          <div class="id">
+            <a onclick="pageTransition('user', '${message.id}')">@${message.id}</a>
+            <br/>
+            <img src="/users/${message.id}/icon"/>
+          </div>
+          <div class="text"></div>
+            <div class="msg_menu">
+              <nav class="div-menu-nav">
+                <div class="menu-tab menu-hover1"><a class="menu-click">&nbsp;</a></div>
+                <div class="box1">
+                  <div>
+                    <a class="delete_button">🗑削除</a>
+                    <a href="javascript:copyToClipboard('https://bbs.mf7cli.tk/thread/<%= thread.id %>#${i}')">🗒リンクをコピー</a>
+                  </div>                      
+                  <div style="font-size: 12px; margin: 0.5em;" class="date">
+                    <br/>
+                    送信された日時: ${date.getFullYear()} %>/${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${min}
+                  </div>   
+                </div>
+              </nav>
+            </div>
+          </div>`;
+          li.querySelector('.text').insertAdjacentHTML('afterbegin', message.text);
+          messages.prepend(li);
+          twemoji.parse(document.body);
+        });
+  
+        lists = Array.from(document.querySelectorAll(".menu-click"));  
+        lists2 = Array.from(document.querySelectorAll(".box1 .delete_button"));
+        lists.forEach((elm) => {
+          elm.addEventListener("click", () => {
+            if(opened_index === undefined || opened_index !== [].slice.call(lists).indexOf(elm)){
+              let lists2 = document.querySelectorAll('.menu-hover1');
+              opened_index = [].slice.call(lists).indexOf(elm);
+              console.log(opened_index);
+              if(document.getElementsByClassName("clicked")[0] !== undefined && document.getElementsByClassName("clicked")[0] !== undefined){ 
+                document.getElementsByClassName("clicked")[0].classList.remove('clicked');
+                document.getElementsByClassName("clicked")[0].classList.remove('clicked');
+              }
+              elm.classList.toggle('clicked');
+              lists2[opened_index].classList.toggle('clicked');
+            }
+            else{
+              let lists2 = document.querySelectorAll('.menu-hover1');
+              console.log(opened_index);
+              lists[opened_index].classList.remove('clicked');
+              lists2[opened_index].classList.remove('clicked');
+              opened_index = undefined;
+            }
+          });
+        });
+    
+        lists2.forEach((elm) => {
+          elm.addEventListener("click", () => {
+            let index = lists2.indexOf(elm);
+            console.log(index);
+            let thread_name;
+            if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36); 
+            else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
+            else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+            else {
+              return;
+            }
+            
+            socket.emit("delete-msg", {
+              thread: {
+                id: thread_name,
+                delete_msg_id: index
+              },
+              user: {
+                id: Cookies.get("id"),
+                password: Cookies.get("password")
+              },
+            });
+            // post('/thread/<%= thread.name %>/delete', {message_num: index})
+          });
+        });
+  
+        document.getElementsByClassName('loader-wrap2')[0].classList.add('loaded');
+      });
     });
   }
 
   function homeTransition (changeUrl = true) {
+    document.getElementById('inputForm').classList.remove('userPage');
+    
     if (changeUrl) history.pushState(null, null, `/home`);
     
     document.getElementsByClassName('pageName')[0].innerText = `Highlight`;
@@ -80,6 +261,8 @@
   }
   
   function threadTransition　(threadName, changeUrl = true) {
+    document.getElementById('inputForm').classList.remove('userPage');
+    
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
     document.getElementsByClassName('pageName')[0].innerText = `#${threadName}`;
     document.getElementsByTagName('title')[0].innerText = `#${threadName} - mf7cli-BBS`;
@@ -215,6 +398,9 @@
     if (document.location.href.slice(8, 31) === 'bbs.mf7cli.potp.me/home') {
       pageTransition('home', null, false);
     }
+    if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/login') {
+      pageTransition('system', 'login', false);
+    }
     if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
     }
   });
@@ -231,5 +417,31 @@
         ">": "&gt;"
       }[match];
     });
+  }
+
+  function submitUserLog() {
+    // document.getElementById("login_form").submit();
+    twemoji.parse(document.body);
+    let thread_name = document.location.href.slice(35);
+    
+    if (document.location.href.slice(8, 35) !== 'bbs.mf7cli.potp.me/users/2/') {
+      document.getElementById("submit_text0").value = "";
+      return;
+    }
+    
+    socket.emit("post-user-log", {
+      thread: {
+        id: thread_name
+      },
+      user: {
+        id: Cookies.get("id"),
+        password: Cookies.get("password")
+      },
+      msg: {
+        text: document.getElementById("submit_text0").value
+      }
+    });
+
+    document.getElementById("submit_text0").value = "";
   }
 </script>

@@ -57,7 +57,7 @@
   }
 
   let connected = false;
-  var socket_connect = io.connect();
+  var socket_connect = io.connect('bbs.mf7cli.potp.me', { secure: true });
 
   socket_connect.on('connect', function(socket) {
     connected = true;
@@ -144,6 +144,8 @@
     else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
       thread_name = `users/${document.location.href.slice(35)}`;
     } else {
+      const spinner = document.getElementsByClassName('loader-wrap')[0];
+      spinner.classList.add('loaded');
       return;
     }
 
@@ -166,6 +168,7 @@
     socket.on("update_status", (msg) => {
       const status_message = document.getElementById("status");
       status_message.innerHTML = `${msg.text}`;
+      status_message.setAttribute('data-content', msg.text);
     });
 
     socket.on("update-rss", (rss) => {

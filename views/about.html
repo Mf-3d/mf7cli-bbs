@@ -19,35 +19,102 @@
       </script>
     </head>
   <body>
-    <div id="columnsBox">
-      <header>
-        <div class="toggle_switch" id="theme_switch">
-          <input type="checkbox" name="xxx" id="cb_toggle_switch" checked/>
-          <label for="cb_toggle_switch"></label>
+    <header>
+            <div class="toggle_switch" id="theme_switch" style="display: inline-block; _display: inline;">
+        <input type="checkbox" id="cb_toggle_switch" checked/>
+        <label for="cb_toggle_switch"></label>
+      </div>
+      <div class="right" style="display: inline-block; _display: inline;">
+        <div id="accountIconBox" style="border: solid 0px #42424200; cursor: pointer; width: 20px; height: 20px; vertical-align: middle;">
+          <img id="accountIcon" src="/image/default_icon.jpeg" style="
+            transition: all 0.1s; 
+            border: solid 0px #42424200; 
+            cursor: pointer; 
+            width: 20px; height: 20px; 
+            vertical-align: middle;
+            margin-top: -4px;"
+          />
         </div>
-        <script>
-          const prefersColorSchemeDark = matchMedia(
-            '(prefers-color-scheme: dark)'
-          ).matches;
+      
+        <div id="accountMenu">
+          <p>
+            <span id="accountId" style="vertical-align: middle; user-select: none;"></span>
+            <br/><br/>
+            <a href="/register" id="accountMenu_Register" style="display: none;">
+              Register
+            </a>
+            <a href="/login" id="accountMenu_Login" style="display: none;">
+              Login
+            </a>
+            <a href="/logout" id="accountMenu_Logout">
+              Logout
+            </a>
+            <a href="/settings" id="accountMenu_Settings">
+              Settings
+            </a>
+          </p>
+        </div>
+      </div>
+      <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+      <script>
+        (async () => {
+          document.getElementById('accountIconBox').onclick = () => {
+            document.getElementById('accountMenu').classList.toggle('show');
+            document.getElementById('accountIconBox').classList.toggle('active');
+          }
+          
+          if (!Cookies.get('id')) {
+            document.getElementById('accountId').innerHTML = `ゲスト`;
+            document.getElementById('accountMenu_Register').style.display = 'block';
+            document.getElementById('accountMenu_Login').style.display = 'block';
+            document.getElementById('accountMenu_Logout').style.display = 'none';
+            document.getElementById('accountMenu_Settings').style.display = 'none';
+            return;
+          }
+          document.getElementById('accountId').innerHTML = `@${Cookies.get('id')}`;
+          
+          const userDataRes = await fetch(`/api/v2/user/get/${Cookies.get('id')}`);
+          const userData = await userDataRes.json();
+      
+          document.getElementById('accountIcon').src = userData.icon;
+        })();
         
-          if (prefersColorSchemeDark) {
+        const prefersColorSchemeDark = matchMedia(
+          '(prefers-color-scheme: dark)'
+        ).matches;
+      
+        console.log(localStorage.getItem("theme"));
+      
+        if (localStorage.getItem("theme") === "dark") {
+          document.body.className = 'dark';
+          document.getElementById("cb_toggle_switch").checked = false;
+          localStorage.setItem('theme', 'dark');
+        } else if(localStorage.getItem("theme") === "light") {
+          document.body.className = '';
+          document.getElementById("cb_toggle_switch").checked = true;
+          localStorage.setItem('theme', 'light');
+        }
+        else {
+          document.body.className = 'dark';
+          document.getElementById("cb_toggle_switch").checked = false;
+          localStorage.setItem('theme', 'dark');
+        }
+        
+        document.getElementById("cb_toggle_switch").onchange = () => {
+          console.log("ライトかどうか:",document.getElementById("cb_toggle_switch").checked)
+          if (document.getElementById("cb_toggle_switch").checked === false) {
             document.body.className = 'dark';
-            document.getElementById("cb_toggle_switch").checked = false;
-          } else {
+            localStorage.setItem('theme', 'dark');
+          } 
+          else if(document.getElementById("cb_toggle_switch").checked === true) {
             document.body.className = '';
-            document.getElementById("cb_toggle_switch").checked = true;
+            localStorage.setItem('theme', 'light');
           }
-          document.getElementById("cb_toggle_switch").onchange = () => {
-            console.log("ライトかどうか:",document.getElementById("cb_toggle_switch").checked)
-            if (document.getElementById("cb_toggle_switch").checked === false) {
-              document.body.className = 'dark';
-            } 
-            else if(document.getElementById("cb_toggle_switch").checked === true) {
-              document.body.className = '';
-            }
-          }
-        </script>
-      </header>
+        }
+      </script>
+    </header>
+    <div id="columnsBox">
       <h1>mf7cli-BBS (alpha)</h1>
       <main>
         <a href="/">Home</a>
@@ -61,8 +128,14 @@
         <ul>
           <li><a href="/tos">利用規約</a></li>
           <li>管理人: <a href="/users/mf7cli">@mf7cli</a></li>
+          <li><a href="https://github.com/mf-3d/mf7cli-bbs">GitHub</a></li>
         </ul>
       </main>
     </div>
+    <footer>
+      <small>&copy; mf7cli 2022</small>
+      <small><a href="/tos">Term of Service</a></small>
+      <small><a href="/about">About</a></small>
+    </footer>
   </body>
 </html>
