@@ -499,7 +499,7 @@ header .right {
   position: static;
 }
 
-#accountMenu a {
+#accountMenu p > a {
   position: static;
   display: block;
   border-bottom: solid 1px #424242;

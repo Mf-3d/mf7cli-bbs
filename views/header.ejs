@@ -17,7 +17,10 @@
 
   <div id="accountMenu">
     <p>
-      <span id="accountId" style="vertical-align: middle; user-select: none;"></span>
+      <span>
+        <a id="accountId" style="vertical-align: middle; user-select: none;"></a>
+      </span>
+      
       <br/><br/>
       <a href="/register" id="accountMenu_Register" style="display: none;">
         Register
@@ -55,6 +58,7 @@
       return;
     }
     document.getElementById('accountId').innerHTML = `@${Cookies.get('id')}`;
+    document.getElementById('accountId').href = `/users/2/${Cookies.get('id')}`;
     
     const userDataRes = await fetch(`/api/v2/user/get/${Cookies.get('id')}`);
     const userData = await userDataRes.json();
