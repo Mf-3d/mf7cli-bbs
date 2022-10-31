@@ -4,7 +4,8 @@ const threadManager = require('../lib/threadManager');
 const authManager = require('../lib/authManager');
 const fs = require('fs');
 const bcrypt = require("bcrypt");
-const DBClient = require("@replit/database");
+const serverConfig = require('../server_config.json');
+const DBClient = require(serverConfig["config_module"]);
 
 let router = express.Router();
 const threads = JSON.parse(fs.readFileSync(__dirname + "/../data/threads/threads.json"));
