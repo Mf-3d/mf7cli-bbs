@@ -1,6 +1,7 @@
 const express = require('express')
 const userManager = require('../lib/userManager');
 const threadManager = require('../lib/threadManager');
+const authManager = require('../lib/authManager');
 const fs = require('fs');
 const bcrypt = require("bcrypt");
 const DBClient = require("@replit/database");
@@ -282,6 +283,12 @@ router.get('/user/:user_id/badges/remove/:badge_id', async (req, res) => {
   res.json({
     status: 0
   });
+});
+
+router.all("/app/auth", async (req, res) => {
+  const hash = await authManager.authApp(req.query.appId, req.query.appSecret, req.query.userId, req.query.userPassword);
+  
+  res.json(hash);
 });
 
 router.use((req, res) => {

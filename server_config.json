@@ -6,5 +6,7 @@
   
   "admin_user": "mf7cli",
   
-  "maintenance": false
+  "maintenance": false,
+
+  "config_module": "@replit/database"
 }
