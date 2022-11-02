@@ -292,6 +292,18 @@ router.all("/app/auth", async (req, res) => {
   res.json(hash);
 });
 
+
+// ---------------------
+// その他
+// ---------------------
+
+router.all("/server/config", (req, res) => {
+  res.json({
+    name: serverConfig.server_name
+  });
+});
+
+
 router.use((req, res) => {
   res.status(404);
   res.json({

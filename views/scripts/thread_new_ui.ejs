@@ -1,5 +1,6 @@
 <script>
-  function pageTransition　(type, page, changeUrl = true) {
+  var server_name;
+  function pageTransition (type, page, changeUrl = true) {
     document.getElementById("status").innerHTML = '';
     document.getElementById("status").setAttribute('data-content', '');
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
@@ -115,7 +116,7 @@
     document.getElementsByClassName('pageName')[0].innerText = `@${userName}`;
     document.getElementsByTagName('title')[0].innerText = `@${userName} - mf7cli-BBS`;
 
-    fetch(`https://bbs.mf7cli.potp.me/api/v1/users/${userName}`)
+    fetch(`/api/v1/users/${userName}`)
     .then(response => response.json())
     .then(async user => {
       const messages = document.getElementById("messages");
@@ -124,7 +125,7 @@
 
       const profileIcon = document.createElement('img');
 
-      profileIcon.src = `https://bbs.mf7cli.potp.me/users/${userName}/icon`;
+      profileIcon.src = `/users/${userName}/icon`;
       profileIcon.style = "width: 100px; height: 100px;";
       profileIcon.id = 'profileIcon'
       
@@ -141,7 +142,7 @@
 
       document.getElementById('messages').before(bio);
 
-      fetch(`https://bbs.mf7cli.potp.me/api/v2/user/getLog/${userName}?length=max`)
+      fetch(`/api/v2/user/getLog/${userName}?length=max`)
       .then(response => response.json())
       .then(async thread => {
         let opened_index = undefined;
@@ -219,9 +220,9 @@
             let index = lists2.indexOf(elm);
             console.log(index);
             let thread_name;
-            if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36); 
-            else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
-            else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+            if (document.location.href.slice(8, 36) === server_name + '/thread/2/') thread_name = document.location.href.slice(36); 
+            else if (document.location.href.slice(8, 34) === server_name + '/thread/') thread_name = document.location.href.slice(34);
+            else if (document.location.href.slice(8, 35) === server_name + '/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
             else {
               return;
             }
@@ -266,7 +267,7 @@
     document.getElementsByClassName('loader-wrap2')[0].classList.remove('loaded');
     document.getElementsByClassName('pageName')[0].innerText = `#${threadName}`;
     document.getElementsByTagName('title')[0].innerText = `#${threadName} - mf7cli-BBS`;
-    fetch(`https://bbs.mf7cli.potp.me/api/v1/thread/${threadName}?length=max`)
+    fetch(`/api/v1/thread/${threadName}?length=max`)
     .then(response => response.json())
     .then(async thread => {
       let opened_index = undefined;
@@ -344,9 +345,9 @@
           let index = lists2.indexOf(elm);
           console.log(index);
           let thread_name;
-          if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') thread_name = document.location.href.slice(36); 
-          else if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') thread_name = document.location.href.slice(34);
-          else if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+          if (document.location.href.slice(8, 36) === server_name + '/thread/2/') thread_name = document.location.href.slice(36); 
+          else if (document.location.href.slice(8, 34) === server_name + '/thread/') thread_name = document.location.href.slice(34);
+          else if (document.location.href.slice(8, 35) === server_name + '/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
           else {
             return;
           }
@@ -372,7 +373,7 @@
   }
   
   window.addEventListener('load', () => {
-    fetch('https://bbs.mf7cli.potp.me/api/v1/thread_list/')
+    fetch('/api/v1/thread_list/')
     .then(response => response.json())
     .then(list => {
       list.threads.forEach((thread) => {
@@ -389,19 +390,19 @@
   });
 
   window.addEventListener('popstate', (event) => {
-    if (document.location.href.slice(8, 36) === 'bbs.mf7cli.potp.me/thread/2/') {
+    if (document.location.href.slice(8, 36) === server_name + '/thread/2/') {
       pageTransition('thread', document.location.href.slice(36), false);
     }
-    if (document.location.href.slice(8, 35) === 'bbs.mf7cli.potp.me/users/2/') {
+    if (document.location.href.slice(8, 35) === server_name + '/users/2/') {
       pageTransition('user', document.location.href.slice(35), false);
     }
-    if (document.location.href.slice(8, 31) === 'bbs.mf7cli.potp.me/home') {
+    if (document.location.href.slice(8, 31) === server_name + '/home') {
       pageTransition('home', null, false);
     }
-    if (document.location.href.slice(8, 32) === 'bbs.mf7cli.potp.me/login') {
+    if (document.location.href.slice(8, 32) === server_name + '/login') {
       pageTransition('system', 'login', false);
     }
-    if (document.location.href.slice(8, 34) === 'bbs.mf7cli.potp.me/thread/') {
+    if (document.location.href.slice(8, 34) === server_name + '/thread/') {
     }
   });
 
@@ -424,7 +425,7 @@
     twemoji.parse(document.body);
     let thread_name = document.location.href.slice(35);
     
-    if (document.location.href.slice(8, 35) !== 'bbs.mf7cli.potp.me/users/2/') {
+    if (document.location.href.slice(8, 35) !== server_name + '/users/2/') {
       document.getElementById("submit_text0").value = "";
       return;
     }
@@ -444,4 +445,8 @@
 
     document.getElementById("submit_text0").value = "";
   }
+
+  window.addEventListener("load", async () => {
+    server_name = (await (await fetch("/api/v2/server/config")).json()).server_name;
+  });
 </script>
