@@ -84,11 +84,8 @@ let userlist;
 
 // キューを削除するあれ
 setInterval(async () => {
-  const val = await db.get("emailauthque")
-  if (val === null) {
-    db.set("emailauthque", []);
-    return;
-  }
+  const val = await db.get("emailauthque", []);
+  
   val.forEach((value, index) => {
     const limit_date = new Date(val[index].date);
     if (limit_date <= new Date()) {
