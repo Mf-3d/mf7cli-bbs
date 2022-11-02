@@ -47,7 +47,7 @@ Replitからフォークした方がいいと思う（？））
 |`public_instance`|（まだ機能はない）                                                  |`boolean`|
 |`admin_user`     |管理者のユーザーID                                                  |`string` |
 |`maintenance`    |メンテナンス中かどうか                                               |`boolean`|
-|`config_module`  |設定の操作に使用するモジュール（`@replit/database`か`./lib/config.js`）|`string` |
+|`config_module`  |設定の操作に使用するモジュール（`@replit/database`か`lib/config.js`の**絶対パス**）|`string` |
 
 ## 4. NPMパッケージをインストールする
 インストール: `npm install`
