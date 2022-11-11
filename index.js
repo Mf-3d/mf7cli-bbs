@@ -1364,7 +1364,7 @@ app.post("/register", (req, res) => {
       console.log(userlist);
 
       if (
-        val === null &&
+        !val &&
         req.body.submit_id[0].length >= 5 &&
         req.body.submit_id[1].length >= 8 &&
         isAlphabet(req.body.submit_id[0]) &&
