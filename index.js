@@ -26,12 +26,14 @@ const nodemailer = require("nodemailer");
 const RssParser = require('rss-parser');
 const rssParser = new RssParser();
 const rqt = require('./lib/promiseRqt');
+require("dotenv").config();
 
 // トークン用
 const uuidjs = require("uuidjs");
 
 const userManager = require('./lib/userManager');
 const threadManager = require('./lib/threadManager');
+const mailManager = require("./lib/mailManager");
 
 // メッセージを自動更新するためのやつ
 const io = require("socket.io")(server);
@@ -98,8 +100,11 @@ setInterval(async () => {
 }, 30000);
 
 // ユーザーリストを表示
-function get_userlist() {
-  return db.list("users");
+async function get_userlist() {
+  let list = await db.list("users");
+
+  if (!list) list = {};
+  return list;
 }
 
 // 起動時に欲しい(?)
@@ -121,6 +126,8 @@ function get_userlist() {
 // findkeyがなければkeyにマッチするやつ
 async function userlist_match(list, key, findkey) {
   console.log("探すキー: ", findkey);
+  if (!list) list = [];
+  console.log("リスト: ", list);
   if (findkey) {
     const result = [];
     for (let i = 0; i < list.length; i++) {
@@ -159,6 +166,8 @@ async function userlist_match(list, key, findkey) {
       }
     }
   }
+
+  return 0;
 }
 
 
@@ -424,6 +433,44 @@ app.post("/login/2/", async (req, res) => {
         serverConfig
       });
     }
+  });
+});
+
+app.get("/sessions/forgot_password/", (req, res) => {
+  res.render("./forgot_password.ejs", {
+    status: "",
+    serverConfig
+  });
+});
+
+app.post("/sessions/forgot_password/", async (req, res) => {
+  console.log(req.body.submit_email);
+  if (userlist_match(await get_userlist(), "email", req.body.submit_email) === 1) {
+    // mailOptions.subject = "【重要】パスワード再設定の確認";
+    // mailOptions.to = req.body.submit_email;
+    // mailOptions.html = `
+    // <html>
+    //   <head>
+    //     <link rel="stylesheet" type="text/css" href="https://${serverConfig.server_domain}/style/style.css"/>
+    //     <title>【重要】パスワード再設定の確認</title>
+    //   </head>
+    //   <body>
+    //     <h1>【重要】パスワード再設定の確認</h1>
+    //     お客さまのアカウントでパスワードの再設定のリクエストがありました。
+    //     <br/>
+    //     もしお客さまがパスワードの再設定をリクエストした場合は、
+    //     <br/>
+    //     以下のリンクからアカウントの確認を行ってください｡
+    //     <br/>
+    //     <a href="https://${serverConfig.server_domain}/auth/">変更する</a>
+    //   </body>
+    // </html>`;
+    // transporter.sendMail(mailOptions);
+  }
+
+  res.render("./forgot_password.ejs", {
+    status: "パスワード再設定用のメールを送信しました。\nもし来ない場合、迷惑メールフォルダもご確認ください。",
+    serverConfig
   });
 });
 
@@ -719,26 +766,28 @@ app.post("/settings/change_email", async (req, res) => {
           console.log("登録時のキュー: ", emailAuthQue);
           console.log(req.cookies.id + "がメールアドレスを登録しようとしています。");
           mailOptions.subject = "【重要】アカウントのメールアドレス登録の確認";
-          mailOptions.to = req.body.submit_text;
-          mailOptions.html = `
-          <html>
-            <head>
-              <link rel="stylesheet" type="text/css" href="https://bbs.mf7cli.potp.me/style/style.css"/>
-              <title>【重要】アカウントのメールアドレス登録の確認</title>
-            </head>
-            <body>
-              <h1>【重要】アカウントのメールアドレス登録の確認</h1>
-              あなたのメールアドレスでmf7cli-BBSにアカウントのメールアドレスを登録をしようとしている人がいます。
-              <br/>
-              もしあなたがアカウント登録をしようとしていたなら、
-              <br/>
-              以下のリンクからアカウントの確認を行ってください｡
-              <br/>
-              <a href="https://bbs.mf7cli.potp.me/auth/exist/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
-            </body>
-          </html>`;
 
-          transporter.sendMail(mailOptions);
+          mailManager.send(
+            "【重要】アカウントのメールアドレス登録の確認",
+            req.body.submit_text,
+            `<html>
+              <head>
+                <link rel="stylesheet" type="text/css" href="https://bbs.mf7cli.potp.me/style/style.css"/>
+                <title>【重要】アカウントのメールアドレス登録の確認</title>
+              </head>
+              <body>
+                <h1>【重要】アカウントのメールアドレス登録の確認</h1>
+                あなたのメールアドレスでmf7cli-BBSにアカウントのメールアドレスを登録をしようとしている人がいます。
+                <br/>
+                もしあなたがアカウント登録をしようとしていたなら、
+                <br/>
+                以下のリンクからアカウントの確認を行ってください｡
+                <br/>
+                <a href="https://bbs.mf7cli.potp.me/auth/exist/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
+              </body>
+            </html>`
+          );
+          
           res.render("./login.ejs", {
             status: "確認用メールを送信しました。",
             account: val,
@@ -846,6 +895,8 @@ app.get("/auth/:token", async (req, res) => {
         return result;
       }
     }
+
+    return [];
   };
 
   console.log(val[checkToken().length - 1]);
@@ -1323,7 +1374,7 @@ app.post("/register", (req, res) => {
         (await userlist_match(userlist, "email", req.body.submit_id[2])) === 0 &&
         (await userlist_match(userlist, "id", req.body.submit_id[0])) === 0
       ) {
-        console.log("一致したメールアドレス: ", await userlist_match(await get_userlist(), "email", req.body.submit_id[2]));
+        console.log("一致したメールアドレス: ", await userlist_match(userlist, "email", req.body.submit_id[2]));
         let emailAuthQue = await db.get("emailauthque");
         if (emailAuthQue !== null) {
           console.log(emailAuthQue);
@@ -1360,26 +1411,28 @@ app.post("/register", (req, res) => {
             db.set("emailauthque", emailAuthQue).then(() => {
               console.log(req.body.submit_id[0] + "が登録しようとしています");
             });
-            mailOptions.subject = "【重要】アカウント登録の確認";
-            mailOptions.to = req.body.submit_id[2];
-            mailOptions.html = `
-            <html>
-              <head>
-                <link rel="stylesheet" type="text/css" href="https://bbs.mf7cli.tk/style/style.css"/>
-                <title>【重要】アカウント登録の確認</title>
-              </head>
-              <body>
-                <h1>【重要】アカウント登録の確認</h1>
-                あなたのメールアドレスでmf7cli-BBSにアカウント登録をしようとしている人がいます。
-                <br/>
-                もしあなたがアカウント登録をしようとしていたなら、
-                <br/>
-                以下のリンクからアカウントの確認を行ってください｡
-                <br/>
-                <a href="https://bbs.mf7cli.potp.me/auth/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
-              </body>
-            </html>`;
-            transporter.sendMail(mailOptions);
+
+            mailManager.send(
+              "【重要】アカウント登録の確認",
+              req.body.submit_id[2],
+              `<html>
+                <head>
+                  <link rel="stylesheet" type="text/css" href="https://${serverConfig.server_domain}/style/style.css"/>
+                  <title>【重要】アカウント登録の確認</title>
+                </head>
+                <body>
+                  <h1>【重要】アカウント登録の確認</h1>
+                  あなたのメールアドレスでmf7cli-BBSにアカウント登録をしようとしている人がいます。
+                  <br/>
+                  もしあなたがアカウント登録をしようとしていたなら、
+                  <br/>
+                  以下のリンクからアカウントの確認を行ってください｡
+                  <br/>
+                  <a href="https://${serverConfig.server_domain}/auth/${emailAuthQue[emailAuthQue.length - 1].token}">認証する</a>
+                </body>
+              </html>`
+            );
+
             console.log(req.body.submit_id[0] + "が登録しようとしています");
             res.render("./login.ejs", {
               status: "確認用メールを送信しました。",

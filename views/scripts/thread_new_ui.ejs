@@ -24,7 +24,7 @@
       
       if (document.getElementById('profileBio')) document.getElementById('profileBio').remove();
       if (document.getElementById('profileIcon')) document.getElementById('profileIcon').remove();
-      document.getElementById('inputForm').innerHTML = '今後ここには、今月のハイライトやニュースが表示されます。';
+      document.getElementById('inputForm').innerHTML = '';
       homeTransition(changeUrl);
       return;
     }
@@ -251,7 +251,7 @@
     
     if (changeUrl) history.pushState(null, null, `/home`);
     
-    document.getElementsByClassName('pageName')[0].innerText = `Highlight`;
+    document.getElementsByClassName('pageName')[0].innerText = `Home`;
     document.getElementsByTagName('title')[0].innerText = `Home - mf7cli-BBS`;
 
     const messages = document.getElementById("messages");

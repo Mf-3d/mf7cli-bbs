@@ -63,6 +63,8 @@
     const userDataRes = await fetch(`/api/v2/user/get/${Cookies.get('id')}`);
     const userData = await userDataRes.json();
 
+    if (!userData.icon) userData.icon = "/image/default_icon.jpeg";
+
     document.getElementById('accountIcon').src = userData.icon;
   })();
   
