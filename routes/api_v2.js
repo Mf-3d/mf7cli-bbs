@@ -299,7 +299,8 @@ router.all("/app/auth", async (req, res) => {
 
 router.all("/server/config", (req, res) => {
   res.json({
-    name: serverConfig.server_name
+    name: serverConfig.server_name,
+    server_name: serverConfig.server_domain
   });
 });
 
