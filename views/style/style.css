@@ -219,7 +219,7 @@ li .msg_menu {
 .div-menu-nav a.clicked{
   background-color:#a3cfef; 
 }
-.div-menu-nav a::before{　/* タブの左側のアクセントの変化の指定 ↓ */
+.div-menu-nav a::before{ /* タブの左側のアクセントの変化の指定 ↓ */
   display: inline-block;
 /*   content: "■";  */
   color: #67b44a; 
@@ -672,6 +672,18 @@ li img {
 .dark .loader {
   border: 5px solid #ff7b00;
   border-bottom-color: transparent;
+  border-radius: 50%;
+}
+
+.logo-small {
+  display: inline-block;
+}
+.logo-small a {
+  vertical-align: middle;
+}
+.logo-small img {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
 }
 

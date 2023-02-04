@@ -3,7 +3,7 @@
 
   let browser;
   const socket = io();
-  
+
   function copyToClipboard(text){
     // テキストコピー用の一時要素を作成
     const pre = document.createElement('pre');
@@ -33,9 +33,9 @@
       document.getElementById("submit_text0").value = "";
       return;
     } 
-    else if (document.location.href.slice(8, 36) === ''+ server_name + '/thread/2/') thread_name = document.location.href.slice(36);
-    else if (document.location.href.slice(8, 34) === ''+ server_name + '/thread/') thread_name = document.location.href.slice(34);
-    else if (document.location.href.slice(8, 35) === ''+ server_name + '/users/2/') {
+    if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') thread_name = document.location.href.slice(8 + server_name.length + 9); 
+    else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 8) === server_name + '/thread/') thread_name = document.location.href.slice(8 + server_name.length + 7);
+    else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 9) === server_name + '/users/') {
       document.getElementById("submit_text0").value = "";
       return;
     } else {
@@ -60,13 +60,12 @@
   
   window.addEventListener('DOMContentLoaded', async (event) => {
     server_name = (await (await fetch("/api/v2/server/config")).json()).server_name;
-
     let connected = false;
-    var socket_connect = io.connect(server_name, { secure: true });
+    var socket_connect = io.connect(null, { secure: true });
 
     socket_connect.on('connect', function(socket) {
       connected = true;
-      console.log("connected!")
+      console.log("connected!");
     });
 
     socket_connect.on('disconnect', function(data) {
@@ -86,24 +85,23 @@
     window.addEventListener('focus', () => {
       let thread_name;
 
-      if (document.location.href.slice(8, 32) === ''+ server_name + '/home/') thread_name = 'sys/home';
-      else if (document.location.href.slice(8, 36) === ''+ server_name + '/thread/2/') thread_name = document.location.href.slice(36);
-      else if (document.location.href.slice(8, 34) === ''+ server_name + '/thread/') thread_name = document.location.href.slice(34);
-      else if (document.location.href.slice(8, 35) === ''+ server_name + '/users/2/') {
-        thread_name = `users/${document.location.href.slice(35)}`;
-      } else {
+      if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') thread_name = document.location.href.slice(8 + server_name.length + 9); 
+      else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 8) === server_name + '/thread/') thread_name = document.location.href.slice(8 + server_name.length + 7);
+      else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 9) === server_name + '/users/') thread_name = `users/${document.location.href.slice(35)}`;
+      else {
         return;
       }
 
       socket.emit("woke-up", {
         thread: {id: thread_name}
       });
+
       console.log("focusされました。");
     });
   });
 
-  window.onload = () => {
-    
+  window.addEventListener("load", async () => {
+    server_name = (await (await fetch("/api/v2/server/config")).json()).server_name;
     let userAgent = window.navigator.userAgent.toLowerCase();
 
     if(userAgent.indexOf('msie') != -1 || userAgent.indexOf('trident') != -1) {
@@ -141,22 +139,20 @@
 
     let thread_name;
 
-
-    // else if (document.location.href.slice(8, 31) === ''+ server_name + '/home') thread_name = 'sys/home';
     if (document.location.href.slice(8, 31) === ''+ server_name + '/home') thread_name = 'sys/home';
-    else if (document.location.href.slice(8, 36) === ''+ server_name + '/thread/2/') thread_name = document.location.href.slice(36);
-    else if (document.location.href.slice(8, 34) === ''+ server_name + '/thread/') thread_name = document.location.href.slice(34);
-    else if (document.location.href.slice(8, 35) === ''+ server_name + '/users/2/') {
-      thread_name = `users/${document.location.href.slice(35)}`;
-    } else {
+    else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') thread_name = document.location.href.slice(8 + server_name.length + 9); 
+    else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 8) === server_name + '/thread/') thread_name = document.location.href.slice(8 + server_name.length + 7);
+    else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 9) === server_name + '/users/') thread_name = `users/${document.location.href.slice(35)}`;
+    else {
       const spinner = document.getElementsByClassName('loader-wrap')[0];
       spinner.classList.add('loaded');
       return;
     }
 
     socket.emit("init", {
-      thread: {id: thread_name}
+      thread: { id: thread_name }
     });
+
     
     // function reconnectSocket() {
     //   if (!connected) {
@@ -197,9 +193,10 @@
 
       let thread_name;
 
-      if (document.location.href.slice(8, 36) === ''+ server_name + '/thread/2/') thread_name = document.location.href.slice(36); 
-      else if (document.location.href.slice(8, 34) === ''+ server_name + '/thread/') thread_name = document.location.href.slice(34);
-      else if (document.location.href.slice(8, 35) === ''+ server_name + '/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+      if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 5) === server_name + '/home') thread_name = 'sys/home';
+      if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') thread_name = document.location.href.slice(8 + server_name.length + 9); 
+      else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 8) === server_name + '/thread/') thread_name = document.location.href.slice(8 + server_name.length + 7);
+      else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 9) === server_name + '/users/') thread_name = `users/${document.location.href.slice(35)}`;
       else {
         return;
       }
@@ -291,8 +288,16 @@
       lists2.forEach((elm) => {
         elm.addEventListener("click", () => {
           index = [].slice.call(lists2).indexOf(elm);
-          console.log(index);
-          
+          console.log({
+            thread: {
+              id: thread_name,
+              delete_msg_id: index
+            },
+            user: {
+              id: Cookies.get("id"),
+              password: Cookies.get("password")
+            },
+          });
           socket.emit("delete-msg", {
             thread: {
               id: thread_name,
@@ -387,7 +392,16 @@
         lists2.forEach((elm) => {
           elm.addEventListener("click", () => {
             index = [].slice.call(lists2).indexOf(elm);
-            console.log(index);
+            console.log({
+              thread: {
+                id: thread_name,
+                delete_msg_id: index
+              },
+              user: {
+                id: Cookies.get("id"),
+                password: Cookies.get("password")
+              },
+            });
             
             socket.emit("delete-msg", {
               thread: {
@@ -496,7 +510,7 @@
         }
         img.src = favicon;  
       }
-  }
+    }
     
     lists.forEach((elm) => {
       elm.addEventListener("click", () => {
@@ -533,7 +547,16 @@
       
       elm.addEventListener("click", () => {
         index = [].slice.call(lists2).indexOf(elm);
-        console.log(index);
+        console.log({
+          thread: {
+            id: thread_name,
+            delete_msg_id: index
+          },
+          user: {
+            id: Cookies.get("id"),
+            password: Cookies.get("password")
+          },
+        });
         socket.emit("delete-msg", {
           thread: {
             id: thread_name,
@@ -570,5 +593,5 @@
       document.body.appendChild(form);
       form.submit();
     }
-  }
+  });
 </script>

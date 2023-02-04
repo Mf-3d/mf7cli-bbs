@@ -132,6 +132,7 @@
       document.getElementById('inputForm').before(profileIcon);
 
       const bio = document.createElement('ul');
+      if (!user.bio) user.bio = "自己紹介がありません。";
       user.bio = escape_html(user.bio);
       user.bio = user.bio.replace(/\n/g, '<br/>');
       
@@ -218,11 +219,20 @@
         lists2.forEach((elm) => {
           elm.addEventListener("click", () => {
             let index = lists2.indexOf(elm);
-            console.log(index);
+            console.log({
+              thread: {
+                id: thread_name,
+                delete_msg_id: index
+              },
+              user: {
+                id: Cookies.get("id"),
+                password: Cookies.get("password")
+              },
+            });
             let thread_name;
-            if (document.location.href.slice(8, 36) === server_name + '/thread/2/') thread_name = document.location.href.slice(36); 
-            else if (document.location.href.slice(8, 34) === server_name + '/thread/') thread_name = document.location.href.slice(34);
-            else if (document.location.href.slice(8, 35) === server_name + '/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+            if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') thread_name = document.location.href.slice(8 + server_name.length + 9); 
+            else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 8) === server_name + '/thread/') thread_name = document.location.href.slice(8 + server_name.length + 7);
+            else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 9) === server_name + '/users/') thread_name = `users/${document.location.href.slice(8 + server_name.length + 8)}`;
             else {
               return;
             }
@@ -343,11 +353,10 @@
       lists2.forEach((elm) => {
         elm.addEventListener("click", () => {
           let index = lists2.indexOf(elm);
-          console.log(index);
           let thread_name;
-          if (document.location.href.slice(8, 36) === server_name + '/thread/2/') thread_name = document.location.href.slice(36); 
-          else if (document.location.href.slice(8, 34) === server_name + '/thread/') thread_name = document.location.href.slice(34);
-          else if (document.location.href.slice(8, 35) === server_name + '/users/2/') thread_name = `users/${document.location.href.slice(35)}`;
+          if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') thread_name = document.location.href.slice(8 + server_name.length + 9); 
+          else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 8) === server_name + '/thread/') thread_name = document.location.href.slice(8 + server_name.length + 7);
+          else if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 9) === server_name + '/users/') thread_name = `users/${document.location.href.slice(35)}`;
           else {
             return;
           }
@@ -390,11 +399,11 @@
   });
 
   window.addEventListener('popstate', (event) => {
-    if (document.location.href.slice(8, 36) === server_name + '/thread/2/') {
-      pageTransition('thread', document.location.href.slice(36), false);
+    if (document.location.href.replace("http://", "https://").slice(8, 8 + server_name.length + 10) === server_name + '/thread/2/') {
+      pageTransition('thread', document.location.href.slice(8 + server_name.length + 9), false);
     }
     if (document.location.href.slice(8, 35) === server_name + '/users/2/') {
-      pageTransition('user', document.location.href.slice(35), false);
+      pageTransition('user', document.location.href.slice(8 + server_name.length + 8), false);
     }
     if (document.location.href.slice(8, 31) === server_name + '/home') {
       pageTransition('home', null, false);
