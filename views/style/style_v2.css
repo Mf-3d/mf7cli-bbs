@@ -27,6 +27,7 @@
 
 body {
   font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+  color: #424242;
 }
 
 aside {
@@ -34,8 +35,12 @@ aside {
   margin-top: 3em;
   position: fixed;
   overflow: hidden;
-  border-right: solid 1px #424242;
+  border-right: solid 1px #adb8c7;
   height: 80%;
+}
+
+.dark aside {
+  border-right: solid 1px #424242;
 }
 
 #columnsBox {

@@ -70,6 +70,7 @@ body {
   background: #fafafa;
   display: flex;
   transition: 0s;
+  color: #424242;
 }
 
 footer {
@@ -206,7 +207,7 @@ li .msg_menu {
   transition: 0.2s;
 }
 .div-menu-nav .date{
-  border-top: solid 1px #878787;
+  border-top: solid 1px #adb8c7;
 }
 .box1 a {
   width: 100%;
@@ -244,7 +245,7 @@ li .msg_menu {
   position: absolute; 
   background-color: #fafafa;
   border-radius: 5px;
-  border: solid 1px #878787;
+  border: solid 1px #adb8c7;
   opacity: 0;
   display: none;
   z-index: 9999;
@@ -295,7 +296,7 @@ a {
 .submit_text {
   font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
   width: 40%;
-  border: solid #878787 1px;
+  border: solid #adb8c7 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   resize: none;
@@ -305,7 +306,7 @@ a {
 
 input[type="text"] {
   width: 250px;
-  border: solid #878787 1px;
+  border: solid #adb8c7 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   margin-bottom: 1em;
@@ -314,7 +315,7 @@ input[type="text"] {
 
 input[type="password"] {
   width: 250px;
-  border: solid #878787 1px;
+  border: solid #adb8c7 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   margin-bottom: 1em;
@@ -323,22 +324,18 @@ input[type="password"] {
 
 input[type="email"] {
   width: 250px;
-  border: solid #878787 1px;
+  border: solid #adb8c7 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   margin-bottom: 1em;
   background: #fafafa;
 }
 
-input[tyoe="submit"]{
-  
-}
-
 input{
   font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
   background: #ffffff;
-  color: #252525;
-  border: solid #878787 1px;
+  color: #424242;
+  border: solid #adb8c7 1px;
   border-radius: 10px; 
   background: #fafafa;
 }
@@ -468,14 +465,15 @@ header .right {
   border-radius: 50%;
   content: "";
   position: absolute;
-  border: solid 0px #424242;
+  border: solid 1px #3d66e1;
   width: 20px;
   height: 20px;
   pointer-events: none;
-  opacity: 0;
-  transition: all 0.1s; 
-  top: -4px;
-  right: 0px;
+  opacity: 1;
+  transition: all 0.5s; 
+  top: -1px;
+  right: -1px;
+  filter: blur(10px);
 }
 
 #accountIconBox.active::before {
@@ -485,8 +483,24 @@ header .right {
   width: 30px!important;
   height: 30px!important;
   top: -9px;
-  right: -10px;
-  border: solid 5px #424242!important;
+  right: -9px;
+  border: solid 5px #3d66e1!important;
+}
+
+.dark #accountIconBox::before {
+  border: solid 0px #ff7b00;
+}
+.dark #accountIconBox.active::before {
+  border: solid 5px #ff7b00!important;
+}
+
+#accountIcon {
+  transition: all 0.1s; 
+  border: solid 0px #42424200; 
+  cursor: pointer; 
+  width: 20px; height: 20px; 
+  vertical-align: middle;
+  margin-top: -4px;
 }
 
 #accountIconBox.active > #accountIcon {
