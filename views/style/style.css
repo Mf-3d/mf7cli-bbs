@@ -90,7 +90,7 @@ footer {
   width: 25%;
   padding-top: 8em;
   padding: 1em;
-  border-left: solid 1px #adb8c7;
+  border-left: solid 1px #e5ebf3;
   position: fixed;
   right: 0em;
   height: 80%;
@@ -138,20 +138,53 @@ img {
 
 ul, ol {
   padding: 0;
+  position: relative;
+}
+
+ul::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  min-height: 40px;
+  left:100px;
+  right: 100px;
+  background: #0026ff3a;
+  display: block;
+  filter: blur(60px);
+  opacity: 40%;
+  animation: ul-before-anim 2s ease infinite alternate;
+}
+
+.dark ul::before {
+  background: #7a4d0a3a;
+}
+
+@keyframes ul-before-anim {
+  from {
+    opacity: 20%;
+  }
+  to {
+    opacity: 40%;
+  }
 }
 
 ul li {
+  /* backdrop-filter: blur(10px); */
   position: relative;
   list-style-type: none!important;/*ポチ消す*/
   padding: 0.5em;
   line-height: 1.5;
-  background: #dbebf8;
+  background: #dbebf87c;
   vertical-align: middle;
   color: #505050;
   border-radius:  0px 15px 15px 0px;/*左側の角丸く*/
   transition: 0.5s;
   width: 90%;
   margin-bottom: 5px;
+  backdrop-filter: drop-shadow(0px 0px 30px #00000056);
+  box-shadow: 10px 10px 10px 2px #0188880e;
+  border: solid #e5ebf3 1px;
 }
 
 li{
@@ -162,7 +195,7 @@ li{
 
 li > .id {
   padding-right: 1em;
-  border-right: solid 1px #adb8c7;
+  border-right: solid 1px #e5ebf3;
   width: 20%;
 }
 
@@ -207,7 +240,7 @@ li .msg_menu {
   transition: 0.2s;
 }
 .div-menu-nav .date{
-  border-top: solid 1px #adb8c7;
+  border-top: solid 1px #e5ebf3;
 }
 .box1 a {
   width: 100%;
@@ -245,11 +278,11 @@ li .msg_menu {
   position: absolute; 
   background-color: #fafafa;
   border-radius: 5px;
-  border: solid 1px #adb8c7;
+  border: solid 1px #e5ebf3;
   opacity: 0;
   display: none;
   z-index: 9999;
-  left:40px;
+  right:40px;
   top: 0em;
   transition: 0.2s;
 }
@@ -296,17 +329,18 @@ a {
 .submit_text {
   font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
   width: 40%;
-  border: solid #adb8c7 1px;
+  border: solid #e5ebf3 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   resize: none;
   height: 100px;
   background: #fafafa;
+  box-shadow: 10px 10px 10px 2px #0188880e;
 }
 
 input[type="text"] {
   width: 250px;
-  border: solid #adb8c7 1px;
+  border: solid #e5ebf3 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   margin-bottom: 1em;
@@ -315,7 +349,7 @@ input[type="text"] {
 
 input[type="password"] {
   width: 250px;
-  border: solid #adb8c7 1px;
+  border: solid #e5ebf3 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   margin-bottom: 1em;
@@ -324,7 +358,7 @@ input[type="password"] {
 
 input[type="email"] {
   width: 250px;
-  border: solid #adb8c7 1px;
+  border: solid #e5ebf3 1px;
   border-radius: 15px 15px 15px 0px;
   padding: 1em;
   margin-bottom: 1em;
@@ -335,7 +369,7 @@ input{
   font-family: 'Montserrat', 'Noto Sans JP', sans-serif;
   background: #ffffff;
   color: #424242;
-  border: solid #adb8c7 1px;
+  border: solid #e5ebf3 1px;
   border-radius: 10px; 
   background: #fafafa;
 }
@@ -548,8 +582,10 @@ header .right {
 }
 
 .dark ul li {
-  background: #333333;
+  background: #3333337c;
   color: #f0f0f0;
+  box-shadow: 10px 10px 30px 5px #d32a000c;
+  border: solid 1px #424242;
 }
 
 .dark input {
@@ -577,6 +613,7 @@ header .right {
   background: #252525;
   color: #f0f0f0;
   border: solid  #505050 1px;
+  box-shadow: 10px 10px 30px 5px #d370000c;
 }
 
 .dark li > .id {
@@ -623,7 +660,7 @@ li img {
 }
 
 #rss_list > li {
-  background: #dbebf8;
+  background: #dbebf87c;
   font-size: 0.8em;
   height: 1em;
   overflow: hidden;
@@ -632,7 +669,7 @@ li img {
   transition: 0.0s;
 }
 #rss_list > li:after {
-  background: linear-gradient(to right, rgba(100, 180, 225, 0) 0%, #dbebf8 50%, #dbebf8 100%);
+  background: linear-gradient(to right, rgba(100, 180, 225, 0) 0%, #dbebf87c 50%, #dbebf87c 100%);
   bottom: 0;
   content: "";
   height: 100%;
@@ -643,11 +680,11 @@ li img {
 }
 
 .dark #rss_list > li {
-  background: #333333;
+  background: #3333337c;
 }
 
 .dark #rss_list > li:after {
-  background: linear-gradient(to right, rgba(100, 180, 225, 0) 0%, #333333 50%, #333333 100%);
+  background: linear-gradient(to right, rgba(100, 180, 225, 0) 0%, #3333337c 50%, #3333337c 100%);
 }
 
 .loader-wrap {
