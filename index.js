@@ -1796,10 +1796,9 @@ threads.threads.forEach((val) => {
 
     const messages_db = await db.get(db_id);
     if (messages_db !== null && messages_db !== undefined) {
-
       res.render("./thread_new_ui.ejs", {
         thread: { name: val, id: val },
-        message: [],
+        message: messages_db.message,
         msg_length: 0,
         status: "",
         md,
