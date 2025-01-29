@@ -1,11 +1,24 @@
 "use strict";
 
-const serverConfig = require('./server_config.json');
+// ----------------
+//  インポート
+// ----------------
 
-const helmet = require('helmet');
+// サーバー設定
+
+const serverConfig = require('./server_config.json'); // 設定ファイル
+
 const express = require("express");
-const multer = require("multer");
-const maxSize = 1 * 1000 * 1000;
+const helmet = require('helmet'); // セキュリティ関係
+const multer = require("multer"); // ファイルのアップロードに使う
+const sharp = require("sharp"); // 画像サイズを変更する用
+
+const app = express();
+
+// アップロードの設定
+
+const maxSize = 1 * 1000 * 1000; // ファイルの最大サイズ
+
 const upload = multer({
   dest: __dirname + "/tmp",
   limits: {
@@ -13,19 +26,22 @@ const upload = multer({
     fileSize: maxSize
   }
 });
-const sharp = require("sharp");
-const app = express();
+
+
 const http = require("node:http");
 const server = new http.Server(app);
+
 const fs = require("node:fs");
+
 const bodyParser = require("body-parser");
 const DBClient = require(serverConfig["config_module"]);
 const cookieparser = require("cookie-parser");
 const bcrypt = require("bcrypt");
-const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer"); // メール送信
 const RssParser = require('rss-parser');
 const rssParser = new RssParser();
 const rqt = require('./lib/promiseRqt');
+
 require("dotenv").config();
 
 // トークン用
